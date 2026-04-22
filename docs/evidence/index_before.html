@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anwar Group Document Hub</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Serif:wght@500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --ink-900: #19212d;
+            --ink-700: #3e4d5f;
+            --ink-500: #6e7b8b;
+            --line: #d7dee6;
+            --brand-900: #0f3556;
+            --brand-700: #1f5f8f;
+            --brand-100: #eaf2f9;
+            --ok-100: #edf7f1;
+            --ok-700: #24633f;
+            --error-100: #fbeeee;
+            --error-700: #8d3232;
+            --danger: #b94040;
+            --surface: #ffffff;
+            --surface-soft: #f6f8fb;
+            --radius-lg: 18px;
+            --radius-md: 12px;
+            --shadow-soft: 0 18px 42px rgba(12, 33, 61, 0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Manrope", sans-serif;
+            color: var(--ink-900);
+            background:
+                radial-gradient(1300px 500px at -10% -8%, #e7edf5 0%, transparent 52%),
+                radial-gradient(950px 420px at 103% 2%, #dce8f3 0%, transparent 50%),
+                linear-gradient(180deg, #f4f7fb 0%, #eef2f7 100%);
+            min-height: 100vh;
+            padding: 24px 14px 40px;
+        }
+
+        .layout {
+            max-width: 1180px;
+            margin: 0 auto;
+            display: grid;
+            gap: 14px;
+            animation: intro 0.45s ease;
+        }
+
+        @keyframes intro {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .hero {
+            background: linear-gradient(135deg, #123555 0%, #17466f 42%, #2a729f 100%);
+            border-radius: var(--radius-lg);
+            color: #ecf5ff;
+            padding: 24px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: var(--shadow-soft);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+        }
+
+        .hero::after {
+            content: "";
+            position: absolute;
+            right: -26px;
+            bottom: -70px;
+            width: 220px;
+            height: 220px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .hero-grid {
+            display: grid;
+            grid-template-columns: 1.6fr 1fr;
+            gap: 18px;
+            align-items: center;
+        }
+
+        .brand-title {
+            margin: 0;
+            font-family: "IBM Plex Serif", serif;
+            font-size: clamp(1.45rem, 3.5vw, 2.1rem);
+            font-weight: 600;
+            letter-spacing: 0.2px;
+        }
+
+        .brand-copy {
+            margin: 10px 0 0;
+            max-width: 780px;
+            color: rgba(237, 246, 255, 0.92);
+        }
+
+        .hero-badge {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 14px;
+            padding: 14px;
+            backdrop-filter: blur(1.5px);
+        }
+
+        .hero-badge p {
+            margin: 0;
+            font-size: 0.9rem;
+            color: rgba(238, 247, 255, 0.92);
+        }
+
+        .hero-badge strong {
+            display: block;
+            margin-bottom: 4px;
+            font-size: 1rem;
+            color: #ffffff;
+        }
+
+        .stats {
+            display: grid;
+            gap: 10px;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+
+        .stat {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: var(--radius-md);
+            padding: 12px 14px;
+            box-shadow: 0 1px 0 rgba(0, 0, 0, 0.03);
+        }
+
+        .stat-label {
+            margin: 0;
+            font-size: 0.77rem;
+            text-transform: uppercase;
+            letter-spacing: 0.45px;
+            color: var(--ink-500);
+            font-weight: 700;
+        }
+
+        .stat-value {
+            margin: 4px 0 0;
+            font-size: 1.22rem;
+            font-weight: 800;
+        }
+
+        .stat small {
+            color: var(--ink-500);
+        }
+
+        .flash {
+            border-radius: var(--radius-md);
+            border: 1px solid transparent;
+            padding: 10px 12px;
+            background: var(--surface);
+        }
+
+        .flash p {
+            margin: 0;
+            font-weight: 700;
+        }
+
+        .flash small {
+            color: var(--ink-700);
+        }
+
+        .flash.success {
+            border-color: #c7e4d1;
+            background: var(--ok-100);
+            color: var(--ok-700);
+        }
+
+        .flash.error {
+            border-color: #e9c7c7;
+            background: var(--error-100);
+            color: var(--error-700);
+        }
+
+        .panel {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: var(--radius-lg);
+            padding: 16px;
+            box-shadow: 0 8px 24px rgba(18, 44, 75, 0.04);
+        }
+
+        .panel h2 {
+            margin: 0;
+            font-size: 1.08rem;
+            font-weight: 800;
+        }
+
+        .panel p {
+            margin: 4px 0 0;
+            color: var(--ink-700);
+        }
+
+        .upload-form {
+            margin-top: 12px;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .upload-form input[type="file"] {
+            width: 100%;
+            border: 1px dashed #bac8d7;
+            background: #f9fbfd;
+            border-radius: 10px;
+            padding: 11px;
+        }
+
+        .btn {
+            border: 0;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.15s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .btn-primary {
+            color: #fff;
+            background: linear-gradient(135deg, #174f7a 0%, #1c6a9e 100%);
+            padding: 11px 16px;
+        }
+
+        .repo-toolbar {
+            margin-top: 12px;
+            display: flex;
+            gap: 10px;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .repo-tools {
+            display: flex;
+            gap: 9px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .search {
+            border: 1px solid #bec8d3;
+            border-radius: 10px;
+            min-width: 260px;
+            padding: 9px 11px;
+            font-size: 0.92rem;
+            outline: none;
+            background: #fbfcfe;
+        }
+
+        .search:focus {
+            border-color: #7ea2bf;
+            box-shadow: 0 0 0 3px rgba(36, 97, 142, 0.14);
+        }
+
+        .view-switch {
+            display: inline-flex;
+            border: 1px solid #bfc9d3;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #f1f5f9;
+        }
+
+        .view-btn {
+            border: 0;
+            background: transparent;
+            color: var(--ink-700);
+            font-size: 0.87rem;
+            padding: 9px 12px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .view-btn.active {
+            color: #133f63;
+            background: #dceaf5;
+        }
+
+        .result-text {
+            margin-left: 4px;
+            font-size: 0.86rem;
+            color: var(--ink-500);
+            font-weight: 600;
+        }
+
+        .table-wrap {
+            margin-top: 10px;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 10px;
+            border-bottom: 1px solid #e8edf2;
+            text-align: left;
+            vertical-align: middle;
+        }
+
+        th {
+            font-size: 0.76rem;
+            text-transform: uppercase;
+            letter-spacing: 0.45px;
+            color: var(--ink-500);
+        }
+
+        .name-col {
+            display: flex;
+            gap: 9px;
+            align-items: center;
+        }
+
+        .name-main {
+            min-width: 0;
+            flex: 1;
+        }
+
+        .mini-preview {
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            border: 1px solid #d9e1ea;
+            overflow: hidden;
+            flex-shrink: 0;
+            background: #f4f7fb;
+        }
+
+        .mini-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            padding: 3px;
+            display: block;
+        }
+
+        .mini-preview span {
+            width: 100%;
+            height: 100%;
+            display: grid;
+            place-items: center;
+            font-size: 0.66rem;
+            font-weight: 800;
+            color: #345b78;
+            background: #ebf3f9;
+        }
+
+        .file-name {
+            font-weight: 700;
+            overflow-wrap: anywhere;
+        }
+
+        .rename-icon-btn {
+            width: 26px;
+            height: 26px;
+            border: 1px solid #c8d2dd;
+            background: #f6f9fc;
+            border-radius: 7px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            cursor: pointer;
+            color: #4b6075;
+            flex-shrink: 0;
+        }
+
+        .rename-icon-btn:hover {
+            background: #e9f1f8;
+            color: #294f6c;
+        }
+
+        .rename-icon-btn svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .type-badge {
+            display: inline-block;
+            border: 1px solid #cad5df;
+            border-radius: 999px;
+            padding: 3px 8px;
+            font-size: 0.72rem;
+            font-weight: 800;
+            color: #365a73;
+            background: #eff5fa;
+        }
+
+        .actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .link-action {
+            border: 0;
+            padding: 0;
+            font-size: 0.86rem;
+            font-weight: 800;
+            background: transparent;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .link-download {
+            color: #1f5f8f;
+        }
+
+        .link-rename {
+            color: #5a6a7a;
+        }
+
+        .link-delete {
+            color: var(--danger);
+        }
+
+        .grid-view {
+            margin-top: 12px;
+        }
+
+        .file-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .file-card {
+            border: 1px solid #d7e0ea;
+            border-radius: 14px;
+            overflow: hidden;
+            background: #fff;
+            box-shadow: 0 4px 14px rgba(18, 44, 75, 0.05);
+            display: flex;
+            flex-direction: column;
+            min-height: 290px;
+        }
+
+        .preview {
+            height: 150px;
+            background: #f2f6fa;
+            border-bottom: 1px solid #dde5ee;
+            position: relative;
+            overflow: hidden;
+            padding: 8px;
+        }
+
+        .preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+            border-radius: 10px;
+            background: #fff;
+        }
+
+        .preview-fallback {
+            width: 100%;
+            height: 100%;
+            display: grid;
+            place-content: center;
+            padding: 13px;
+            color: #2a4f6a;
+            background: linear-gradient(135deg, #edf3f8 0%, #e6eef5 100%);
+        }
+
+        .preview-fallback-inner {
+            width: 100%;
+            height: 100%;
+            border-radius: 10px;
+            border: 1px solid rgba(44, 79, 104, 0.14);
+            background: rgba(255, 255, 255, 0.52);
+            display: grid;
+            place-content: center;
+            text-align: center;
+            gap: 3px;
+        }
+
+        .preview-fallback .ext {
+            font-size: 0.89rem;
+            font-weight: 800;
+            letter-spacing: 0.4px;
+        }
+
+        .preview-fallback small {
+            font-size: 0.71rem;
+            color: #4f667a;
+            font-weight: 600;
+        }
+
+        .preview-pdf {
+            background: linear-gradient(135deg, #f9e6e6 0%, #f4dedd 100%);
+            color: #7f3030;
+        }
+
+        .preview-document {
+            background: linear-gradient(135deg, #e9eef7 0%, #dce6f6 100%);
+            color: #2f4c7a;
+        }
+
+        .preview-spreadsheet {
+            background: linear-gradient(135deg, #e7f4ed 0%, #d6eee2 100%);
+            color: #2f6a4b;
+        }
+
+        .preview-presentation {
+            background: linear-gradient(135deg, #f8efe4 0%, #f1e4d5 100%);
+            color: #7a5530;
+        }
+
+        .preview-archive {
+            background: linear-gradient(135deg, #efe9f5 0%, #e8deef 100%);
+            color: #5c4571;
+        }
+
+        .preview-text {
+            background: linear-gradient(135deg, #edf1f5 0%, #e3e8ef 100%);
+            color: #3f4f66;
+        }
+
+        .card-body {
+            padding: 11px 12px 12px;
+            display: grid;
+            gap: 7px;
+        }
+
+        .card-name {
+            margin: 0;
+            font-size: 0.98rem;
+            font-weight: 800;
+            line-height: 1.3;
+            overflow-wrap: anywhere;
+        }
+
+        .card-meta {
+            margin: 0;
+            color: var(--ink-700);
+            font-size: 0.83rem;
+        }
+
+        .card-actions {
+            margin-top: 2px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .icon-inline-btn {
+            border: 1px solid #c8d2dd;
+            background: #f6f9fc;
+            color: #4b6075;
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            cursor: pointer;
+        }
+
+        .icon-inline-btn:hover {
+            background: #e9f1f8;
+            color: #294f6c;
+        }
+
+        .icon-inline-btn svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .audit-list {
+            margin: 12px 0 0;
+            list-style: none;
+            padding: 0;
+            display: grid;
+            gap: 8px;
+        }
+
+        .audit-item {
+            border: 1px solid #dce4ed;
+            border-radius: 11px;
+            background: var(--surface-soft);
+            padding: 10px 12px;
+            font-size: 0.89rem;
+        }
+
+        .audit-item strong {
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            color: #3e5164;
+            letter-spacing: 0.5px;
+        }
+
+        .audit-meta {
+            margin-top: 3px;
+            color: var(--ink-500);
+            font-size: 0.8rem;
+        }
+
+        .empty {
+            margin-top: 10px;
+            border: 1px dashed #bcc8d5;
+            background: #f7fafc;
+            border-radius: 12px;
+            color: var(--ink-500);
+            text-align: center;
+            padding: 16px;
+        }
+
+        dialog {
+            border: 1px solid #c8d3de;
+            border-radius: 14px;
+            padding: 0;
+            width: min(92vw, 470px);
+            box-shadow: 0 28px 80px rgba(14, 34, 58, 0.25);
+        }
+
+        dialog::backdrop {
+            background: rgba(16, 34, 54, 0.36);
+        }
+
+        .dialog-head {
+            padding: 14px 16px;
+            border-bottom: 1px solid #dce5ef;
+            background: #f7fafd;
+        }
+
+        .dialog-head h3 {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 800;
+        }
+
+        .dialog-body {
+            padding: 14px 16px 16px;
+            display: grid;
+            gap: 10px;
+        }
+
+        .dialog-meta {
+            font-size: 0.9rem;
+            color: var(--ink-700);
+        }
+
+        .dialog-input {
+            width: 100%;
+            border: 1px solid #bdc9d6;
+            border-radius: 10px;
+            padding: 10px 11px;
+            font-size: 0.95rem;
+            outline: none;
+        }
+
+        .dialog-input:focus {
+            border-color: #7ea2bf;
+            box-shadow: 0 0 0 3px rgba(36, 97, 142, 0.14);
+        }
+
+        .dialog-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .btn-secondary {
+            background: #eef3f7;
+            color: #374a5f;
+            border: 1px solid #c2d0dc;
+            padding: 9px 13px;
+        }
+
+        [hidden] {
+            display: none !important;
+        }
+
+        @media (max-width: 980px) {
+            .hero-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .file-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 700px) {
+            body {
+                padding: 14px 9px 28px;
+            }
+
+            .hero,
+            .panel {
+                padding: 13px;
+            }
+
+            .upload-form {
+                grid-template-columns: 1fr;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+            }
+
+            .search {
+                min-width: 0;
+                width: 100%;
+            }
+
+            .file-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="layout">
+        <section class="hero">
+            <div class="hero-grid">
+                <div>
+                    <h1 class="brand-title">Anwar Group Document Hub</h1>
+                    <p class="brand-copy">Platform pertukaran dokumen resmi antar entitas di dalam Anwar Group. Fungsi utamanya untuk distribusi berkas lintas unit kerja, kontrol dokumen operasional, dan jejak audit terpusat.</p>
+                </div>
+                <aside class="hero-badge">
+                    <strong>Enterprise Document Hub</strong>
+                    <p>Dirancang sebagai gerbang dokumen internal, bukan public file drop, sehingga alur kolaborasi antardepartemen lebih terstruktur.</p>
+                </aside>
+            </div>
+        </section>
+
+        <section class="stats">
+            <article class="stat">
+                <p class="stat-label">Total File</p>
+                <p class="stat-value">2</p>
+                <small>Asset aktif dalam repository</small>
+            </article>
+            <article class="stat">
+                <p class="stat-label">Storage Terpakai</p>
+                <p class="stat-value">106.53 KB</p>
+                <small>0.01% dari kapasitas</small>
+            </article>
+            <article class="stat">
+                <p class="stat-label">Limit Upload</p>
+                <p class="stat-value">20.00 MB</p>
+                <small>Per file upload</small>
+            </article>
+            <article class="stat">
+                <p class="stat-label">Akses LAN</p>
+                <p class="stat-value">172.24.80.1</p>
+                <small>http://172.24.80.1/simple_cloud/</small>
+            </article>
+        </section>
+
+        
+        <section class="panel">
+            <h2>Upload Management</h2>
+            <p>Ekstensi yang diizinkan: pdf, doc, docx, xls, xlsx, csv, txt, png, jpg, jpeg, zip, rar, ppt, pptx.</p>
+            <form class="upload-form" action="upload.php" method="post" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="3c9316d909b5cc871d220f5500cce735184d1438be5f93af5bd228b1ffe93af8">
+                <input type="file" name="fileToUpload" accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.png,.jpg,.jpeg,.zip,.rar,.ppt,.pptx" required>
+                <button class="btn btn-primary" type="submit">Upload File</button>
+            </form>
+        </section>
+
+        <section class="panel">
+            <h2>Repository File</h2>
+            <div class="repo-toolbar">
+                <p>Repository mendukung mode list dan grid untuk monitoring dokumen lintas entitas.</p>
+                <div class="repo-tools">
+                    <input id="fileSearch" class="search" type="search" placeholder="Cari nama file...">
+                    <div class="view-switch" role="group" aria-label="Switch view">
+                        <button type="button" class="view-btn active" data-view-target="list">List</button>
+                        <button type="button" class="view-btn" data-view-target="grid">Grid</button>
+                    </div>
+                    <span id="resultText" class="result-text"></span>
+                </div>
+            </div>
+
+                            <div id="listView" class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Nama File</th>
+                                <th>Tipe</th>
+                                <th>Ukuran</th>
+                                <th>Terakhir Ubah</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                                                                                            <tr data-file-item data-view="list" data-name="hmti.png">
+                                    <td>1</td>
+                                    <td>
+                                        <div class="name-col">
+                                            <div class="mini-preview">
+                                                                                                    <img src="uploads/hmti.png" alt="hmti.png">
+                                                                                            </div>
+                                            <div class="name-main">
+                                                <span class="file-name">hmti.png</span>
+                                            </div>
+                                            <button type="button" class="rename-icon-btn" title="Rename file" aria-label="Rename file" data-open-rename data-file="hmti.png">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <path d="M12 20h9"/>
+                                                    <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </td>
+                                    <td><span class="type-badge">PNG</span></td>
+                                    <td>35.29 KB</td>
+                                    <td>21 Apr 2026 22:31:27</td>
+                                    <td>
+                                        <div class="actions">
+                                            <a class="link-action link-download" href="download.php?file=hmti.png">Download</a>
+                                            <form action="delete.php" method="post" onsubmit="return confirm('Hapus file ini dari server?');">
+                                                <input type="hidden" name="csrf_token" value="3c9316d909b5cc871d220f5500cce735184d1438be5f93af5bd228b1ffe93af8">
+                                                <input type="hidden" name="file" value="hmti.png">
+                                                <button class="link-action link-delete" type="submit">Delete</button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                                                                            <tr data-file-item data-view="list" data-name="frame_10.png">
+                                    <td>2</td>
+                                    <td>
+                                        <div class="name-col">
+                                            <div class="mini-preview">
+                                                                                                    <img src="uploads/Frame_10.png" alt="Frame_10.png">
+                                                                                            </div>
+                                            <div class="name-main">
+                                                <span class="file-name">Frame_10.png</span>
+                                            </div>
+                                            <button type="button" class="rename-icon-btn" title="Rename file" aria-label="Rename file" data-open-rename data-file="Frame_10.png">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <path d="M12 20h9"/>
+                                                    <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </td>
+                                    <td><span class="type-badge">PNG</span></td>
+                                    <td>71.23 KB</td>
+                                    <td>15 Apr 2026 10:28:24</td>
+                                    <td>
+                                        <div class="actions">
+                                            <a class="link-action link-download" href="download.php?file=Frame_10.png">Download</a>
+                                            <form action="delete.php" method="post" onsubmit="return confirm('Hapus file ini dari server?');">
+                                                <input type="hidden" name="csrf_token" value="3c9316d909b5cc871d220f5500cce735184d1438be5f93af5bd228b1ffe93af8">
+                                                <input type="hidden" name="file" value="Frame_10.png">
+                                                <button class="link-action link-delete" type="submit">Delete</button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                                    </tbody>
+                    </table>
+                </div>
+
+                <div id="gridView" class="grid-view" hidden>
+                    <div class="file-grid">
+                                                                                <article class="file-card" data-file-item data-view="grid" data-name="hmti.png">
+                                <div class="preview">
+                                                                            <img src="uploads/hmti.png" alt="hmti.png">
+                                                                    </div>
+                                <div class="card-body">
+                                    <h3 class="card-name">hmti.png</h3>
+                                    <p class="card-meta">35.29 KB | 21 Apr 2026 22:31:27</p>
+                                    <p class="card-meta">Type: PNG</p>
+                                    <div class="card-actions">
+                                        <a class="link-action link-download" href="download.php?file=hmti.png">Download</a>
+                                        <button type="button" class="icon-inline-btn" title="Rename file" aria-label="Rename file" data-open-rename data-file="hmti.png">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M12 20h9"/>
+                                                <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/>
+                                            </svg>
+                                        </button>
+                                        <form action="delete.php" method="post" onsubmit="return confirm('Hapus file ini dari server?');">
+                                            <input type="hidden" name="csrf_token" value="3c9316d909b5cc871d220f5500cce735184d1438be5f93af5bd228b1ffe93af8">
+                                            <input type="hidden" name="file" value="hmti.png">
+                                            <button class="link-action link-delete" type="submit">Delete</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </article>
+                                                                                <article class="file-card" data-file-item data-view="grid" data-name="frame_10.png">
+                                <div class="preview">
+                                                                            <img src="uploads/Frame_10.png" alt="Frame_10.png">
+                                                                    </div>
+                                <div class="card-body">
+                                    <h3 class="card-name">Frame_10.png</h3>
+                                    <p class="card-meta">71.23 KB | 15 Apr 2026 10:28:24</p>
+                                    <p class="card-meta">Type: PNG</p>
+                                    <div class="card-actions">
+                                        <a class="link-action link-download" href="download.php?file=Frame_10.png">Download</a>
+                                        <button type="button" class="icon-inline-btn" title="Rename file" aria-label="Rename file" data-open-rename data-file="Frame_10.png">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M12 20h9"/>
+                                                <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/>
+                                            </svg>
+                                        </button>
+                                        <form action="delete.php" method="post" onsubmit="return confirm('Hapus file ini dari server?');">
+                                            <input type="hidden" name="csrf_token" value="3c9316d909b5cc871d220f5500cce735184d1438be5f93af5bd228b1ffe93af8">
+                                            <input type="hidden" name="file" value="Frame_10.png">
+                                            <button class="link-action link-delete" type="submit">Delete</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </article>
+                                            </div>
+                </div>
+                    </section>
+
+        <section class="panel">
+            <h2>Audit Trail</h2>
+            <p>Riwayat aktivitas upload, download, rename, dan delete untuk kontrol operasional.</p>
+                            <ul class="audit-list">
+                                            <li class="audit-item">
+                            <strong>upload</strong>
+                            <span> - success</span>
+                            <div class="audit-meta">
+                                2026-04-21T22:31:27+08:00 |
+                                IP: ::1                            </div>
+                        </li>
+                                    </ul>
+                    </section>
+    </main>
+
+    <dialog id="renameDialog">
+        <div class="dialog-head">
+            <h3>Rename File</h3>
+        </div>
+        <form method="post" action="rename.php">
+            <div class="dialog-body">
+                <p class="dialog-meta">File saat ini: <strong id="renameCurrentLabel">-</strong></p>
+                <input type="hidden" name="csrf_token" value="3c9316d909b5cc871d220f5500cce735184d1438be5f93af5bd228b1ffe93af8">
+                <input type="hidden" name="current_file" id="renameCurrentFile">
+                <input type="text" class="dialog-input" name="new_file" id="renameNewFile" maxlength="180" required>
+                <div class="dialog-actions">
+                    <button class="btn btn-secondary" type="button" id="renameCancelBtn">Batal</button>
+                    <button class="btn btn-primary" type="submit">Simpan Nama</button>
+                </div>
+            </div>
+        </form>
+    </dialog>
+
+    <script>
+        (function () {
+            const searchInput = document.getElementById('fileSearch');
+            const resultText = document.getElementById('resultText');
+            const viewButtons = document.querySelectorAll('[data-view-target]');
+            const listView = document.getElementById('listView');
+            const gridView = document.getElementById('gridView');
+            const storageKey = 'ags_repo_view_mode';
+            let activeView = 'list';
+
+            function getActiveItems() {
+                const selector = '[data-file-item][data-view="' + activeView + '"]';
+                return Array.from(document.querySelectorAll(selector));
+            }
+
+            function applyFilter() {
+                const keyword = String(searchInput ? searchInput.value : '').toLowerCase().trim();
+                const allItems = document.querySelectorAll('[data-file-item]');
+                allItems.forEach(function (item) {
+                    const name = String(item.getAttribute('data-name') || '');
+                    item.hidden = !name.includes(keyword);
+                });
+                updateResultText();
+            }
+
+            function updateResultText() {
+                if (!resultText) {
+                    return;
+                }
+
+                const visibleCount = getActiveItems().filter(function (item) {
+                    return !item.hidden;
+                }).length;
+                resultText.textContent = visibleCount + ' file terlihat';
+            }
+
+            function setView(mode) {
+                activeView = mode === 'grid' ? 'grid' : 'list';
+
+                if (listView) {
+                    listView.hidden = activeView !== 'list';
+                }
+
+                if (gridView) {
+                    gridView.hidden = activeView !== 'grid';
+                }
+
+                viewButtons.forEach(function (button) {
+                    const isActive = button.getAttribute('data-view-target') === activeView;
+                    button.classList.toggle('active', isActive);
+                });
+
+                updateResultText();
+            }
+
+            if (searchInput) {
+                searchInput.addEventListener('input', applyFilter);
+            }
+
+            viewButtons.forEach(function (button) {
+                button.addEventListener('click', function () {
+                    const mode = String(button.getAttribute('data-view-target') || 'list');
+                    setView(mode);
+                    try {
+                        localStorage.setItem(storageKey, mode);
+                    } catch (error) {
+                        console.warn(error);
+                    }
+                });
+            });
+
+            let initialMode = 'list';
+            try {
+                const savedMode = localStorage.getItem(storageKey);
+                if (savedMode === 'grid') {
+                    initialMode = 'grid';
+                }
+            } catch (error) {
+                console.warn(error);
+            }
+
+            setView(initialMode);
+            applyFilter();
+
+            const renameDialog = document.getElementById('renameDialog');
+            const renameCurrentLabel = document.getElementById('renameCurrentLabel');
+            const renameCurrentFile = document.getElementById('renameCurrentFile');
+            const renameNewFile = document.getElementById('renameNewFile');
+            const renameCancelBtn = document.getElementById('renameCancelBtn');
+            const renameButtons = document.querySelectorAll('[data-open-rename]');
+
+            function openRenameDialog(fileName) {
+                if (!renameDialog || !renameCurrentLabel || !renameCurrentFile || !renameNewFile) {
+                    return;
+                }
+
+                renameCurrentLabel.textContent = fileName;
+                renameCurrentFile.value = fileName;
+                renameNewFile.value = fileName;
+                renameNewFile.focus();
+                renameNewFile.select();
+
+                if (typeof renameDialog.showModal === 'function') {
+                    renameDialog.showModal();
+                    return;
+                }
+
+                const promptedName = window.prompt('Masukkan nama baru file:', fileName);
+                if (!promptedName || promptedName.trim() === '') {
+                    return;
+                }
+                renameNewFile.value = promptedName.trim();
+                renameCurrentFile.form.submit();
+            }
+
+            renameButtons.forEach(function (button) {
+                button.addEventListener('click', function () {
+                    const fileName = String(button.getAttribute('data-file') || '');
+                    if (fileName !== '') {
+                        openRenameDialog(fileName);
+                    }
+                });
+            });
+
+            if (renameCancelBtn && renameDialog) {
+                renameCancelBtn.addEventListener('click', function () {
+                    renameDialog.close();
+                });
+            }
+        })();
+    </script>
+</body>
+</html>

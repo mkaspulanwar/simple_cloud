@@ -1,0 +1,5 @@
+{"timestamp":"2026-04-21T22:31:27+08:00","action":"upload","status":"success","ip":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36","context":{"file_name":"hmti.png","size":36142,"mime":"image/png"}}
+{"timestamp":"2026-04-21T23:10:24+08:00","action":"upload","status":"success","ip":"::1","user_agent":"curl/8.18.0","context":{"file_name":"AGDH_praktek_20260421_231024.txt","size":150,"mime":"text/plain"}}
+{"timestamp":"2026-04-21T23:10:25+08:00","action":"download","status":"success","ip":"::1","user_agent":"curl/8.18.0","context":{"file_name":"AGDH_praktek_20260421_231024.txt","size":150,"mime":"text/plain"}}
+{"timestamp":"2026-04-21T23:10:26+08:00","action":"delete","status":"success","ip":"::1","user_agent":"curl/8.18.0","context":{"file_name":"AGDH_praktek_20260421_231024.txt"}}
+{"timestamp":"2026-04-22T09:31:55+08:00","action":"upload","status":"success","ip":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36","context":{"file_name":"dbs.png","size":38985,"mime":"image/png"}}
