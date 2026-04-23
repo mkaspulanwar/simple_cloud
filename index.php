@@ -438,6 +438,10 @@ $lanUrl = preg_replace('/:\/\/[^\/]+/', '://' . $hostAddress, app_url());
             display: block;
         }
 
+        .previewable-image {
+            cursor: zoom-in;
+        }
+
         .mini-preview span {
             width: 100%;
             height: 100%;
@@ -494,6 +498,12 @@ $lanUrl = preg_replace('/:\/\/[^\/]+/', '://' . $hostAddress, app_url());
             display: flex;
             gap: 8px;
             align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .actions form,
+        .card-actions form {
+            margin: 0;
         }
 
         .link-action {
@@ -773,6 +783,72 @@ $lanUrl = preg_replace('/:\/\/[^\/]+/', '://' . $hostAddress, app_url());
             padding: 9px 13px;
         }
 
+        .image-lightbox {
+            position: fixed;
+            inset: 0;
+            z-index: 1200;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 14px;
+            background: rgba(12, 24, 38, 0.74);
+        }
+
+        .image-lightbox-frame {
+            position: relative;
+            width: min(96vw, 940px);
+            max-height: 92vh;
+            border-radius: 14px;
+            padding: 12px 12px 8px;
+            background: #0e1722;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            box-shadow: 0 24px 60px rgba(3, 10, 18, 0.48);
+            display: grid;
+            gap: 8px;
+        }
+
+        .image-lightbox-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            color: #d8e4ee;
+            font-size: 0.84rem;
+            font-weight: 700;
+        }
+
+        .image-lightbox-close {
+            width: 32px;
+            height: 32px;
+            border-radius: 9px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.1);
+            color: #f3f8fd;
+            cursor: pointer;
+            font-size: 1rem;
+            line-height: 1;
+        }
+
+        .image-lightbox-view {
+            border-radius: 11px;
+            background: #0a121b;
+            padding: 8px;
+            max-height: calc(92vh - 86px);
+            display: grid;
+            place-items: center;
+            overflow: hidden;
+        }
+
+        .image-lightbox-view img {
+            width: 100%;
+            height: 100%;
+            max-height: calc(92vh - 110px);
+            object-fit: contain;
+            display: block;
+            border-radius: 8px;
+            background: #ffffff;
+        }
+
         [hidden] {
             display: none !important;
         }
@@ -814,8 +890,118 @@ $lanUrl = preg_replace('/:\/\/[^\/]+/', '://' . $hostAddress, app_url());
                 width: 100%;
             }
 
+            .repo-toolbar {
+                align-items: stretch;
+            }
+
+            .repo-tools {
+                width: 100%;
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .view-switch {
+                width: 100%;
+            }
+
+            .view-btn {
+                flex: 1;
+            }
+
+            .result-text {
+                margin-left: 0;
+            }
+
             .file-grid {
                 grid-template-columns: 1fr;
+            }
+
+            .table-wrap {
+                overflow: visible;
+            }
+
+            .repo-table {
+                border-collapse: separate;
+            }
+
+            .repo-table thead {
+                display: none;
+            }
+
+            .repo-table,
+            .repo-table tbody {
+                display: block;
+                width: 100%;
+            }
+
+            .repo-table tbody tr {
+                display: block;
+                background: #f9fbfd;
+                border: 1px solid #d8e3ee;
+                border-radius: 12px;
+                padding: 10px;
+                margin-bottom: 10px;
+            }
+
+            .repo-table tbody tr:last-child {
+                margin-bottom: 0;
+            }
+
+            .repo-table td {
+                display: grid;
+                grid-template-columns: minmax(82px, 106px) 1fr;
+                gap: 8px;
+                align-items: start;
+                border-bottom: 1px dashed #dce5ef;
+                padding: 8px 0;
+            }
+
+            .repo-table td:last-child {
+                border-bottom: 0;
+                padding-bottom: 0;
+            }
+
+            .repo-table td::before {
+                content: attr(data-label);
+                font-size: 0.72rem;
+                font-weight: 800;
+                text-transform: uppercase;
+                letter-spacing: 0.4px;
+                color: var(--ink-500);
+                line-height: 1.35;
+                padding-top: 2px;
+            }
+
+            .repo-table td[data-label="Nama File"] {
+                align-items: center;
+            }
+
+            .repo-table td[data-label="Nama File"] .name-col {
+                gap: 8px;
+                align-items: flex-start;
+            }
+
+            .repo-table td[data-label="Nama File"] .mini-preview {
+                width: 32px;
+                height: 32px;
+            }
+
+            .repo-table td[data-label="Aksi"] .actions {
+                gap: 10px;
+            }
+
+            .repo-table td[data-label="Aksi"] .link-action {
+                font-size: 0.83rem;
+            }
+
+            .image-lightbox {
+                padding: 8px;
+            }
+
+            .image-lightbox-frame {
+                width: 100%;
+                max-height: 94vh;
+                padding: 10px 10px 8px;
             }
         }
     </style>
@@ -895,7 +1081,7 @@ $lanUrl = preg_replace('/:\/\/[^\/]+/', '://' . $hostAddress, app_url());
                 <div class="empty">Belum ada file tersimpan di server.</div>
             <?php else: ?>
                 <div id="listView" class="table-wrap">
-                    <table>
+                    <table class="repo-table">
                         <thead>
                             <tr>
                                 <th>No</th>
@@ -914,12 +1100,12 @@ $lanUrl = preg_replace('/:\/\/[^\/]+/', '://' . $hostAddress, app_url());
                                     $category = preview_category((string) $file['extension']);
                                 ?>
                                 <tr data-file-item data-view="list" data-name="<?= htmlspecialchars(strtolower($fileName)); ?>">
-                                    <td><?= $index + 1; ?></td>
-                                    <td>
+                                    <td data-label="No"><?= $index + 1; ?></td>
+                                    <td data-label="Nama File">
                                         <div class="name-col">
                                             <div class="mini-preview">
                                                 <?php if ($category === 'image'): ?>
-                                                    <img src="<?= htmlspecialchars(file_public_url($fileName)); ?>" alt="<?= htmlspecialchars($fileName); ?>">
+                                                    <img class="previewable-image" src="<?= htmlspecialchars(file_public_url($fileName)); ?>" alt="<?= htmlspecialchars($fileName); ?>" data-preview-src="<?= htmlspecialchars(file_public_url($fileName)); ?>" data-preview-alt="<?= htmlspecialchars($fileName); ?>" tabindex="0" role="button" aria-label="Preview gambar <?= htmlspecialchars($fileName); ?>">
                                                 <?php else: ?>
                                                     <span><?= htmlspecialchars($extension); ?></span>
                                                 <?php endif; ?>
@@ -935,10 +1121,10 @@ $lanUrl = preg_replace('/:\/\/[^\/]+/', '://' . $hostAddress, app_url());
                                             </button>
                                         </div>
                                     </td>
-                                    <td><span class="type-badge"><?= htmlspecialchars($extension); ?></span></td>
-                                    <td><?= Formatter::bytes((int) $file['size']); ?></td>
-                                    <td><?= Formatter::datetime((int) $file['modified']); ?></td>
-                                    <td>
+                                    <td data-label="Tipe"><span class="type-badge"><?= htmlspecialchars($extension); ?></span></td>
+                                    <td data-label="Ukuran"><?= Formatter::bytes((int) $file['size']); ?></td>
+                                    <td data-label="Terakhir Ubah"><?= Formatter::datetime((int) $file['modified']); ?></td>
+                                    <td data-label="Aksi">
                                         <div class="actions">
                                             <a class="link-action link-download" href="download.php?file=<?= urlencode($fileName); ?>">Download</a>
                                             <form action="delete.php" method="post" onsubmit="return confirm('Hapus file ini dari server?');">
@@ -966,7 +1152,7 @@ $lanUrl = preg_replace('/:\/\/[^\/]+/', '://' . $hostAddress, app_url());
                             <article class="file-card" data-file-item data-view="grid" data-name="<?= htmlspecialchars(strtolower($fileName)); ?>">
                                 <div class="preview">
                                     <?php if ($category === 'image'): ?>
-                                        <img src="<?= htmlspecialchars(file_public_url($fileName)); ?>" alt="<?= htmlspecialchars($fileName); ?>">
+                                        <img class="previewable-image" src="<?= htmlspecialchars(file_public_url($fileName)); ?>" alt="<?= htmlspecialchars($fileName); ?>" data-preview-src="<?= htmlspecialchars(file_public_url($fileName)); ?>" data-preview-alt="<?= htmlspecialchars($fileName); ?>" tabindex="0" role="button" aria-label="Preview gambar <?= htmlspecialchars($fileName); ?>">
                                     <?php else: ?>
                                         <div class="preview-fallback preview-<?= htmlspecialchars($category); ?>">
                                             <div class="preview-fallback-inner">
@@ -1041,6 +1227,18 @@ $lanUrl = preg_replace('/:\/\/[^\/]+/', '://' . $hostAddress, app_url());
             </div>
         </form>
     </dialog>
+
+    <div id="imageLightbox" class="image-lightbox" hidden>
+        <div class="image-lightbox-frame">
+            <div class="image-lightbox-toolbar">
+                <span id="imageLightboxTitle">Preview Gambar</span>
+                <button type="button" class="image-lightbox-close" id="imageLightboxClose" aria-label="Tutup preview">&times;</button>
+            </div>
+            <div class="image-lightbox-view">
+                <img id="imageLightboxImg" src="" alt="">
+            </div>
+        </div>
+    </div>
 
     <script>
         (function () {
@@ -1119,6 +1317,9 @@ $lanUrl = preg_replace('/:\/\/[^\/]+/', '://' . $hostAddress, app_url());
                 if (savedMode === 'grid') {
                     initialMode = 'grid';
                 }
+                if (savedMode !== 'grid' && savedMode !== 'list' && window.matchMedia('(max-width: 700px)').matches) {
+                    initialMode = 'grid';
+                }
             } catch (error) {
                 console.warn(error);
             }
@@ -1171,6 +1372,72 @@ $lanUrl = preg_replace('/:\/\/[^\/]+/', '://' . $hostAddress, app_url());
                     renameDialog.close();
                 });
             }
+
+            const imageLightbox = document.getElementById('imageLightbox');
+            const imageLightboxImg = document.getElementById('imageLightboxImg');
+            const imageLightboxTitle = document.getElementById('imageLightboxTitle');
+            const imageLightboxClose = document.getElementById('imageLightboxClose');
+            const previewableImages = document.querySelectorAll('.previewable-image');
+
+            function openImageLightbox(src, alt) {
+                if (!imageLightbox || !imageLightboxImg || !src) {
+                    return;
+                }
+
+                imageLightboxImg.src = src;
+                imageLightboxImg.alt = alt || 'Preview gambar';
+                if (imageLightboxTitle) {
+                    imageLightboxTitle.textContent = alt || 'Preview Gambar';
+                }
+                imageLightbox.hidden = false;
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closeImageLightbox() {
+                if (!imageLightbox || !imageLightboxImg) {
+                    return;
+                }
+
+                imageLightbox.hidden = true;
+                imageLightboxImg.src = '';
+                imageLightboxImg.alt = '';
+                document.body.style.overflow = '';
+            }
+
+            previewableImages.forEach(function (image) {
+                image.addEventListener('click', function () {
+                    const src = String(image.getAttribute('data-preview-src') || image.getAttribute('src') || '');
+                    const alt = String(image.getAttribute('data-preview-alt') || image.getAttribute('alt') || '');
+                    openImageLightbox(src, alt);
+                });
+
+                image.addEventListener('keydown', function (event) {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        const src = String(image.getAttribute('data-preview-src') || image.getAttribute('src') || '');
+                        const alt = String(image.getAttribute('data-preview-alt') || image.getAttribute('alt') || '');
+                        openImageLightbox(src, alt);
+                    }
+                });
+            });
+
+            if (imageLightboxClose) {
+                imageLightboxClose.addEventListener('click', closeImageLightbox);
+            }
+
+            if (imageLightbox) {
+                imageLightbox.addEventListener('click', function (event) {
+                    if (event.target === imageLightbox) {
+                        closeImageLightbox();
+                    }
+                });
+            }
+
+            document.addEventListener('keydown', function (event) {
+                if (event.key === 'Escape' && imageLightbox && !imageLightbox.hidden) {
+                    closeImageLightbox();
+                }
+            });
         })();
     </script>
 </body>
