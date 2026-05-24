@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Security\AuthManager;
+
 final class AuditLogger
 {
     private string $logPath;
@@ -26,6 +28,7 @@ final class AuditLogger
             'timestamp' => date('c'),
             'action' => $action,
             'status' => $status,
+            'user' => AuthManager::user(),
             'ip' => client_ip(),
             'user_agent' => client_user_agent(),
             'context' => $context,

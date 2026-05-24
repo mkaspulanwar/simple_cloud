@@ -144,7 +144,7 @@ final class CloudStorageService
         $files = [];
 
         foreach ($items as $item) {
-            if ($item === '.' || $item === '..') {
+            if ($item === '.' || $item === '..' || str_starts_with($item, '.')) {
                 continue;
             }
 
@@ -175,7 +175,15 @@ final class CloudStorageService
      */
     public function getStats(): array
     {
-        $files = $this->listFiles();
+        return $this->getStatsForFiles($this->listFiles());
+    }
+
+    /**
+     * @param array<int, array{name:string,size:int,modified:int,extension:string,mime:string}> $files
+     * @return array{total_files:int,total_size:int,max_capacity:int,usage_percent:float,last_modified:int|null}
+     */
+    public function getStatsForFiles(array $files): array
+    {
         $totalSize = 0;
         $lastModified = null;
 
@@ -359,6 +367,10 @@ final class CloudStorageService
     {
         $safeName = basename(trim($name));
         if ($safeName === '' || $safeName === '.' || $safeName === '..') {
+            return null;
+        }
+
+        if (str_starts_with($safeName, '.')) {
             return null;
         }
 
