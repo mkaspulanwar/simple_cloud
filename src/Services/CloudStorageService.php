@@ -6,6 +6,7 @@ namespace App\Services;
 final class CloudStorageService
 {
     private string $uploadDir;
+    private string $trashDir;
     private int $maxFileSize;
     private int $maxStorageCapacity;
     /** @var array<int, string> */
@@ -16,6 +17,7 @@ final class CloudStorageService
     /**
      * @param array{
      *     upload_dir:string,
+     *     trash_dir?:string,
      *     max_file_size:int,
      *     max_storage_capacity:int,
      *     allowed_extensions:array<int, string>,
@@ -24,13 +26,15 @@ final class CloudStorageService
      */
     public function __construct(array $config)
     {
-        $this->uploadDir = rtrim($config['upload_dir'], DIRECTORY_SEPARATOR);
+        $this->uploadDir = $this->normalizePath($config['upload_dir']);
+        $this->trashDir = $this->normalizePath((string) ($config['trash_dir'] ?? dirname($this->uploadDir) . DIRECTORY_SEPARATOR . 'trash'));
         $this->maxFileSize = (int) $config['max_file_size'];
         $this->maxStorageCapacity = (int) $config['max_storage_capacity'];
         $this->allowedExtensions = array_map('strtolower', $config['allowed_extensions']);
         $this->allowedMimeTypes = $config['allowed_mime_types'];
 
         $this->ensureUploadDirectory();
+        $this->ensureTrashDirectory();
     }
 
     public function uploadDirectoryName(): string
@@ -136,7 +140,23 @@ final class CloudStorageService
      */
     public function listFiles(): array
     {
-        $items = scandir($this->uploadDir);
+        return $this->listFilesFromDirectory($this->uploadDir);
+    }
+
+    /**
+     * @return array<int, array{name:string,size:int,modified:int,extension:string,mime:string}>
+     */
+    public function listTrashFiles(): array
+    {
+        return $this->listFilesFromDirectory($this->trashDir);
+    }
+
+    /**
+     * @return array<int, array{name:string,size:int,modified:int,extension:string,mime:string}>
+     */
+    private function listFilesFromDirectory(string $directory): array
+    {
+        $items = scandir($directory);
         if ($items === false) {
             return [];
         }
@@ -148,7 +168,7 @@ final class CloudStorageService
                 continue;
             }
 
-            $path = $this->pathFor($item);
+            $path = $directory . DIRECTORY_SEPARATOR . $item;
             if (!is_file($path)) {
                 continue;
             }
@@ -209,17 +229,76 @@ final class CloudStorageService
 
     public function delete(string $fileName): bool
     {
+        return $this->moveToTrash($fileName) !== null;
+    }
+
+    public function deleteFromTrash(string $fileName): bool
+    {
+        $trashFile = $this->resolveTrashFile($fileName);
+        if ($trashFile === null) {
+            return false;
+        }
+
+        return unlink($trashFile['path']);
+    }
+
+    /**
+     * @return array{trash_name:string,restored_name:string,size:int,mime:string}|null
+     */
+    public function restoreFromTrash(string $trashName, string $preferredName): ?array
+    {
+        $trashFile = $this->resolveTrashFile($trashName);
+        if ($trashFile === null) {
+            return null;
+        }
+
+        $safePreferredName = $this->sanitizeFileName($preferredName);
+        if ($safePreferredName === '') {
+            $safePreferredName = (string) $trashFile['name'];
+        }
+
+        $restoredName = $this->buildUniqueFileName($safePreferredName);
+        $targetPath = $this->pathFor($restoredName);
+
+        if (!rename($trashFile['path'], $targetPath)) {
+            return null;
+        }
+
+        return [
+            'trash_name' => (string) $trashFile['name'],
+            'restored_name' => $restoredName,
+            'size' => filesize($targetPath) ?: 0,
+            'mime' => $this->detectMimeType($targetPath),
+        ];
+    }
+
+    /**
+     * @return array{original_name:string,trash_name:string,trash_path:string}|null
+     */
+    public function moveToTrash(string $fileName): ?array
+    {
         $safeName = $this->sanitizeRequestedName($fileName);
         if ($safeName === null) {
-            return false;
+            return null;
         }
 
         $filePath = $this->pathFor($safeName);
         if (!is_file($filePath)) {
-            return false;
+            return null;
         }
 
-        return unlink($filePath);
+        $trashName = $this->buildUniqueTrashFileName($safeName);
+        $trashPath = $this->trashDir . DIRECTORY_SEPARATOR . $trashName;
+
+        if (!rename($filePath, $trashPath)) {
+            return null;
+        }
+
+        return [
+            'original_name' => $safeName,
+            'trash_name' => $trashName,
+            'trash_path' => $trashPath,
+        ];
     }
 
     /**
@@ -326,10 +405,40 @@ final class CloudStorageService
         ];
     }
 
+    /**
+     * @return array{name:string,path:string,size:int,mime:string}|null
+     */
+    public function resolveTrashFile(string $fileName): ?array
+    {
+        $safeName = $this->sanitizeRequestedName($fileName);
+        if ($safeName === null) {
+            return null;
+        }
+
+        $filePath = $this->trashDir . DIRECTORY_SEPARATOR . $safeName;
+        if (!is_file($filePath)) {
+            return null;
+        }
+
+        return [
+            'name' => $safeName,
+            'path' => $filePath,
+            'size' => filesize($filePath) ?: 0,
+            'mime' => $this->detectMimeType($filePath),
+        ];
+    }
+
     private function ensureUploadDirectory(): void
     {
         if (!is_dir($this->uploadDir)) {
             mkdir($this->uploadDir, 0777, true);
+        }
+    }
+
+    private function ensureTrashDirectory(): void
+    {
+        if (!is_dir($this->trashDir)) {
+            mkdir($this->trashDir, 0777, true);
         }
     }
 
@@ -396,6 +505,21 @@ final class CloudStorageService
         return $nameOnly . '_' . $stamp . $suffix;
     }
 
+    private function buildUniqueTrashFileName(string $safeName): string
+    {
+        $targetPath = $this->trashDir . DIRECTORY_SEPARATOR . $safeName;
+        if (!file_exists($targetPath)) {
+            return $safeName;
+        }
+
+        $nameOnly = pathinfo($safeName, PATHINFO_FILENAME);
+        $extension = pathinfo($safeName, PATHINFO_EXTENSION);
+        $stamp = date('Ymd_His') . '_' . random_int(1000, 9999);
+        $suffix = $extension !== '' ? '.' . $extension : '';
+
+        return $nameOnly . '_deleted_' . $stamp . $suffix;
+    }
+
     private function isMimeAllowed(string $extension, string $mimeType): bool
     {
         $allowedForExtension = $this->allowedMimeTypes[$extension] ?? [];
@@ -417,5 +541,21 @@ final class CloudStorageService
             UPLOAD_ERR_EXTENSION => 'Upload diblokir oleh ekstensi PHP.',
             default => 'Terjadi kesalahan upload yang tidak diketahui.',
         };
+    }
+
+    private function normalizePath(string $path): string
+    {
+        $path = rtrim($path, DIRECTORY_SEPARATOR);
+        $realPath = realpath($path);
+        if ($realPath !== false) {
+            return rtrim($realPath, DIRECTORY_SEPARATOR);
+        }
+
+        $parent = realpath(dirname($path));
+        if ($parent !== false) {
+            return $parent . DIRECTORY_SEPARATOR . basename($path);
+        }
+
+        return $path;
     }
 }

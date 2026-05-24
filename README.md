@@ -8,6 +8,8 @@ Cloudify adalah workspace visual berbasis PHP untuk mengelola upload tim dengan 
 - Download file
 - Rename file
 - Delete file via POST + CSRF token
+- Delete memindahkan file ke `trash/` agar masih bisa dibackup
+- Backup manual, backup sebelum update, backup folder uploads/trash, dan backup database
 - Audit trail aktivitas upload/download/delete
 - Homepage publik bergaya galeri visual
 - Login system dengan role `admin`, `user`, `viewer`, dan `guest`
@@ -24,9 +26,15 @@ Cloudify adalah workspace visual berbasis PHP untuk mengelola upload tim dengan 
 - `upload.php` - endpoint upload
 - `download.php` - endpoint download
 - `delete.php` - endpoint delete
+- `trash_delete.php` - endpoint hapus permanen file dari trash
+- `trash_restore.php` - endpoint mengembalikan file dari trash ke katalog
+- `trash.php` - halaman Trash untuk admin, superadmin, dan user
+- `backup.php` - endpoint backup manual dari dashboard admin
+- `backup_scheduled.php` - script backup terjadwal via CLI/Task Scheduler
 - `rename.php` - endpoint rename
 - `preview.php` - preview gambar publik untuk homepage
 - `src/Services/CloudStorageService.php` - service storage
+- `src/Services/BackupService.php` - service backup source code, uploads, trash, dan database
 - `src/Services/FileOwnershipStore.php` - metadata pemilik file dan policy akses file
 - `src/Security/AuthManager.php` - session login, verifikasi password, dan guard halaman
 - `src/Services/AuditLogger.php` - audit event logger
@@ -40,6 +48,28 @@ Cloudify adalah workspace visual berbasis PHP untuk mengelola upload tim dengan 
 3. Buka:
    - `http://localhost/simple_cloud/`
 4. Untuk uji browser lain, buka URL yang sama di browser berbeda.
+
+## Backup
+- Hasil backup lokal disimpan di `backup/YYYY-MM-DD/`.
+- Salinan lokasi berbeda disimpan di `C:\cloud_storage_backup\YYYY-MM-DD\`.
+- Isi backup harian:
+  - `source_code.zip`
+  - `uploads.zip`
+  - `trash.zip`
+  - `database_cloud_storage_YYYY-MM-DD.sql`
+- Tombol `Backup Sekarang` dan `Backup Sebelum Update` tersedia di dashboard untuk admin/superadmin.
+- Backup terjadwal dapat dijalankan lewat Windows Task Scheduler dengan command:
+
+```powershell
+C:\xampp\php\php.exe C:\xampp\htdocs\simple_cloud\backup_scheduled.php
+```
+
+## Trash
+- Delete dari library memindahkan file ke folder `trash/`.
+- Admin, superadmin, dan user dapat membuka halaman `Trash`.
+- User hanya melihat file trash miliknya sendiri.
+- File di `Trash` dapat dikembalikan ke katalog atau dihapus permanen.
+- Setiap perubahan trash akan memperbarui backup `trash.zip`.
 
 ## Akun Demo
 - Admin: `admin` / `admin123`

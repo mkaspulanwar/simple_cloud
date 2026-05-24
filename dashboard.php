@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . DIRECTORY_SEPARATOR . 'bootstrap.php';
+require_once __DIR__ . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'Support' . DIRECTORY_SEPARATOR . 'dashboard_layout.php';
 
 use App\Security\AuthManager;
 use App\Security\CsrfManager;
@@ -114,43 +115,16 @@ $canUpload = AuthManager::can('upload');
 $canDownload = AuthManager::can('download');
 $canDelete = AuthManager::can('delete');
 $canRename = AuthManager::can('rename');
+$canBackup = AuthManager::can('backup');
+$canManageTrash = AuthManager::can('manage_trash');
 $canViewAudit = AuthManager::can('view_audit');
 $canManageUsers = AuthManager::can('manage_users');
 $userStore = new UserStore((string) app_config('auth.users_path'));
 $dashboardUsers = $canManageUsers ? $userStore->list() : [];
 $roleCounts = $userStore->countsByRole();
 $manageableRoles = $userStore->roles();
-$roleDescriptions = [
-    'superadmin' => [
-        'title' => 'Workspace Command Center',
-        'copy' => 'Kelola struktur tim, user, admin, file, dan audit dari satu pusat kontrol Cloudify.',
-    ],
-    'admin' => [
-        'title' => 'Library Operations',
-        'copy' => 'Jaga library tetap bersih dengan kontrol rename, delete, download, dan audit untuk semua asset.',
-    ],
-    'user' => [
-        'title' => 'Personal Workspace',
-        'copy' => 'Upload, rename, download, dan hapus asset pribadi tanpa mengganggu workspace orang lain.',
-    ],
-    'guest' => [
-        'title' => 'Read-Only Dashboard',
-        'copy' => 'Pantau ringkasan workspace tanpa akses upload, preview/download, rename, atau delete file.',
-    ],
-];
-$roleDescription = $roleDescriptions[$currentUser['role']] ?? $roleDescriptions['user'];
-$roleLabels = [
-    'superadmin' => 'Superadmin',
-    'admin' => 'Admin',
-    'user' => 'User',
-    'guest' => 'Guest',
-];
-$capabilities = [
-    ['label' => 'Upload', 'allowed' => $canUpload],
-    ['label' => 'Read', 'allowed' => $canDownload],
-    ['label' => 'Edit', 'allowed' => $canRename],
-    ['label' => 'Delete', 'allowed' => $canDelete],
-];
+$dashboardLayout = dashboard_layout_context($currentUser, $appName);
+$roleLabels = $dashboardLayout['roleLabels'];
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -158,10 +132,10 @@ $capabilities = [
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($appName); ?></title>
-    <link rel="icon" href="/favicon.png" type="image/png">
+    <link rel="icon" href="favicon.png" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Serif:wght@500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&family=IBM+Plex+Serif:wght@500;600&display=swap" rel="stylesheet">
     <style>
         :root {
             --ink-900: #19212d;
@@ -2677,90 +2651,15 @@ $capabilities = [
             }
         }
     </style>
+    <link rel="stylesheet" href="assets/css/dashboard-panel.css?v=20260524-panel6">
 </head>
 <body>
     <div class="dashboard-shell">
-        <aside class="dashboard-sidebar" aria-label="Navigasi dashboard">
-            <a class="dashboard-brand" href="dashboard.php" aria-label="<?= htmlspecialchars($appName); ?> Dashboard">
-                <span class="dashboard-mark">C</span>
-                <span>
-                    <strong><?= htmlspecialchars($appName); ?></strong>
-                    <span>Dashboard</span>
-                </span>
-            </a>
-
-            <nav class="sidebar-block">
-                <span class="sidebar-label">Workspace</span>
-                <a class="sidebar-link is-active" href="dashboard.php">
-                    <span class="sidebar-icon">OV</span>
-                    Overview
-                </a>
-                <?php if ($canUpload): ?>
-                    <a class="sidebar-link" href="#upload-panel">
-                        <span class="sidebar-icon">UP</span>
-                        Upload
-                    </a>
-                <?php endif; ?>
-                <a class="sidebar-link" href="#library-panel">
-                    <span class="sidebar-icon">LB</span>
-                    Library
-                </a>
-                <?php if ($canManageUsers): ?>
-                    <a class="sidebar-link" href="#users-panel">
-                        <span class="sidebar-icon">US</span>
-                        Users
-                    </a>
-                <?php endif; ?>
-                <?php if ($canViewAudit): ?>
-                    <a class="sidebar-link" href="#audit-panel">
-                        <span class="sidebar-icon">AU</span>
-                        Audit
-                    </a>
-                <?php endif; ?>
-            </nav>
-
-            <nav class="sidebar-block">
-                <span class="sidebar-label">Publik</span>
-                <a class="sidebar-link" href="index.php">
-                    <span class="sidebar-icon">HM</span>
-                    Halaman Utama
-                </a>
-                <a class="sidebar-link" href="catalog.php">
-                    <span class="sidebar-icon">KG</span>
-                    Katalog
-                </a>
-            </nav>
-
-            <div class="sidebar-account">
-                <div>
-                    <strong><?= htmlspecialchars($currentUser['name']); ?></strong>
-                    <span><?= htmlspecialchars($roleLabels[$currentUser['role']] ?? ucfirst($currentUser['role'])); ?></span>
-                </div>
-                <a class="sidebar-logout" href="logout.php">Logout</a>
-            </div>
-        </aside>
+        <?php render_dashboard_sidebar($dashboardLayout, 'overview'); ?>
 
         <div class="dashboard-main">
             <main class="layout">
-                <section class="dashboard-top">
-                    <div>
-                        <p class="page-kicker"><?= htmlspecialchars($roleLabels[$currentUser['role']] ?? ucfirst($currentUser['role'])); ?> Workspace</p>
-                        <h1>Dashboard <?= htmlspecialchars($appName); ?></h1>
-                        <p>Kelola file, akses user, dan aktivitas workspace dari panel yang bersih dan ringkas.</p>
-                        <div class="capability-list" aria-label="Hak akses akun">
-                            <?php foreach ($capabilities as $capability): ?>
-                                <span class="capability-chip <?= $capability['allowed'] ? '' : 'is-off'; ?>">
-                                    <span class="capability-dot"></span>
-                                    <?= htmlspecialchars($capability['label']); ?>
-                                </span>
-                            <?php endforeach; ?>
-                        </div>
-                    </div>
-                    <aside class="top-card">
-                        <strong><?= htmlspecialchars($roleDescription['title']); ?></strong>
-                        <p><?= htmlspecialchars($roleDescription['copy']); ?></p>
-                    </aside>
-                </section>
+                <?php render_dashboard_top_panel($dashboardLayout); ?>
 
                 <section class="stats">
                     <article class="stat">
@@ -2926,6 +2825,30 @@ $capabilities = [
             </section>
         <?php endif; ?>
 
+        <?php if ($canBackup): ?>
+            <section class="panel" id="backup-panel">
+                <div class="panel-head">
+                    <div>
+                        <h2>Backup Storage</h2>
+                        <p>Buat backup source code, uploads, trash, dan database ke folder lokal serta lokasi cadangan berbeda.</p>
+                    </div>
+                    <span class="panel-count">ZIP + SQL</span>
+                </div>
+                <div class="actions">
+                    <form action="backup.php" method="post">
+                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken); ?>">
+                        <input type="hidden" name="backup_type" value="manual">
+                        <button class="btn btn-primary" type="submit">Backup Sekarang</button>
+                    </form>
+                    <form action="backup.php" method="post">
+                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken); ?>">
+                        <input type="hidden" name="backup_type" value="before_update">
+                        <button class="btn btn-secondary" type="submit">Backup Sebelum Update</button>
+                    </form>
+                </div>
+            </section>
+        <?php endif; ?>
+
         <section class="panel" id="library-panel">
             <div class="panel-head">
                 <div>
@@ -2982,7 +2905,7 @@ $capabilities = [
                                                     <span><?= htmlspecialchars($extension); ?></span>
                                                 <?php endif; ?>
                                             </div>
-                                            <div class="name-main">
+                                            <div class="name-main file-info">
                                                 <span class="file-name"><?= htmlspecialchars($fileName); ?></span>
                                             </div>
                                             <?php if ($canRename): ?>
@@ -3007,7 +2930,7 @@ $capabilities = [
                                                 <a class="link-action link-download" href="download.php?file=<?= urlencode($fileName); ?>">Download</a>
                                             <?php endif; ?>
                                             <?php if ($canDelete): ?>
-                                                <form action="delete.php" method="post" onsubmit="return confirm('Hapus file ini dari server?');">
+                                                <form action="delete.php" method="post" onsubmit="return confirm('File ini akan dipindahkan ke Trash, bukan dihapus permanen. Lanjutkan?');">
                                                     <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken); ?>">
                                                     <input type="hidden" name="file" value="<?= htmlspecialchars($fileName); ?>">
                                                     <button class="link-action link-delete" type="submit">Delete</button>
@@ -3063,7 +2986,7 @@ $capabilities = [
                                             </button>
                                         <?php endif; ?>
                                         <?php if ($canDelete): ?>
-                                            <form action="delete.php" method="post" onsubmit="return confirm('Hapus file ini dari server?');">
+                                            <form action="delete.php" method="post" onsubmit="return confirm('File ini akan dipindahkan ke Trash, bukan dihapus permanen. Lanjutkan?');">
                                                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken); ?>">
                                                 <input type="hidden" name="file" value="<?= htmlspecialchars($fileName); ?>">
                                                 <button class="link-action link-delete" type="submit">Delete</button>
@@ -3144,6 +3067,23 @@ $capabilities = [
 
     <script>
         (function () {
+            const menuByHash = {
+                '#upload-panel': 'upload',
+                '#users-panel': 'users',
+                '#library-panel': 'library',
+                '#audit-panel': 'audit'
+            };
+
+            function syncSidebarMenu() {
+                const activeMenu = menuByHash[window.location.hash] || 'overview';
+                document.querySelectorAll('.sidebar-link[data-menu]').forEach(function (link) {
+                    link.classList.toggle('is-active', link.getAttribute('data-menu') === activeMenu);
+                });
+            }
+
+            syncSidebarMenu();
+            window.addEventListener('hashchange', syncSidebarMenu);
+
             const searchInput = document.getElementById('fileSearch');
             const resultText = document.getElementById('resultText');
             const viewButtons = document.querySelectorAll('[data-view-target]');

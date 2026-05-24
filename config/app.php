@@ -8,6 +8,8 @@ return [
     ],
     'storage' => [
         'upload_dir' => __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'uploads',
+        'trash_dir' => __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'trash',
+        'trash_metadata_path' => __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'logs' . DIRECTORY_SEPARATOR . 'trash_files.json',
         'metadata_path' => __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'logs' . DIRECTORY_SEPARATOR . 'file_owners.json',
         'max_file_size' => 10 * 1024 * 1024,
         'max_storage_capacity' => 1024 * 1024 * 1024,
@@ -40,5 +42,16 @@ return [
         'username' => 'root',
         'password' => '',
         'charset' => 'utf8mb4',
+    ],
+    'backup' => [
+        'local_dir' => __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'backup',
+        'external_dir' => 'C:' . DIRECTORY_SEPARATOR . 'cloud_storage_backup',
+        'source_dir' => __DIR__ . DIRECTORY_SEPARATOR . '..',
+        'exclude_dirs' => [
+            '.git',
+            'backup',
+            'uploads',
+            'trash',
+        ],
     ],
 ];
