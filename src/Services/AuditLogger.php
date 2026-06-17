@@ -51,12 +51,7 @@ final class AuditLogger
             return [];
         }
 
-        $lines = file($this->logPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-        if ($lines === false) {
-            return [];
-        }
-
-        $sliced = array_slice($lines, -$limit);
+        $sliced = $this->tailLines(max(1, $limit));
         $events = [];
 
         foreach (array_reverse($sliced) as $line) {
@@ -67,5 +62,27 @@ final class AuditLogger
         }
 
         return $events;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function tailLines(int $limit): array
+    {
+        $file = new \SplFileObject($this->logPath, 'r');
+        $file->seek(PHP_INT_MAX);
+        $lastLine = $file->key();
+        $start = max(0, $lastLine - $limit + 1);
+        $lines = [];
+
+        for ($lineNumber = $start; $lineNumber <= $lastLine; $lineNumber++) {
+            $file->seek($lineNumber);
+            $line = trim((string) $file->current());
+            if ($line !== '') {
+                $lines[] = $line;
+            }
+        }
+
+        return $lines;
     }
 }

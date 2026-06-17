@@ -18,12 +18,16 @@ CREATE TABLE IF NOT EXISTS `users` (
 CREATE TABLE IF NOT EXISTS `files` (
   `file_name` VARCHAR(255) NOT NULL,
   `owner_id` VARCHAR(40) NULL,
+  `extension` VARCHAR(20) NOT NULL DEFAULT '',
   `size` BIGINT UNSIGNED NULL,
   `mime` VARCHAR(120) NULL,
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` DATETIME NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`file_name`),
   INDEX `idx_files_owner_id` (`owner_id`),
+  INDEX `idx_files_extension` (`extension`),
+  INDEX `idx_files_created_at` (`created_at`),
+  INDEX `idx_files_updated_at` (`updated_at`),
   CONSTRAINT `fk_files_owner`
     FOREIGN KEY (`owner_id`) REFERENCES `users` (`id`)
     ON UPDATE CASCADE
@@ -40,15 +44,16 @@ ON DUPLICATE KEY UPDATE
   `active` = VALUES(`active`),
   `password_hash` = VALUES(`password_hash`);
 
-INSERT INTO `files` (`file_name`, `owner_id`, `created_at`, `updated_at`) VALUES
-('Jembatan_Charles_di_Praha.jpg', 'superadmin', '2026-05-23 22:27:45', '2026-05-23 22:27:45'),
-('Travel_with_the_lenses.jpg', 'superadmin', '2026-05-23 22:27:54', '2026-05-23 22:27:54'),
-('pexels-donovan-kelly-110228397-26834515.jpg', 'admin', '2026-05-23 22:51:10', '2026-05-23 22:51:10'),
-('pexels-zfxmql-36746834.jpg', 'admin', '2026-05-23 22:51:20', '2026-05-23 22:51:20'),
-('pexels-lovely-ruby-2151623858-34072847.jpg', 'admin', '2026-05-23 22:51:29', '2026-05-23 22:51:29'),
-('pexels-willianjusten-21207396.jpg', 'admin', '2026-05-23 22:51:42', '2026-05-23 22:51:42'),
-('pexels-russell-butcher-2935498-31147719.jpg', 'admin', '2026-05-23 22:51:52', '2026-05-23 22:51:52'),
-('pexels-a-r-2157678326-37486134.jpg', 'admin', '2026-05-23 22:52:03', '2026-05-23 22:52:03'),
-('pexels-paulie-ivicic-568819821-17135781.jpg', 'admin', '2026-05-24 10:44:56', '2026-05-24 10:44:56')
+INSERT INTO `files` (`file_name`, `owner_id`, `extension`, `created_at`, `updated_at`) VALUES
+('Jembatan_Charles_di_Praha.jpg', 'superadmin', 'jpg', '2026-05-23 22:27:45', '2026-05-23 22:27:45'),
+('Travel_with_the_lenses.jpg', 'superadmin', 'jpg', '2026-05-23 22:27:54', '2026-05-23 22:27:54'),
+('pexels-donovan-kelly-110228397-26834515.jpg', 'admin', 'jpg', '2026-05-23 22:51:10', '2026-05-23 22:51:10'),
+('pexels-zfxmql-36746834.jpg', 'admin', 'jpg', '2026-05-23 22:51:20', '2026-05-23 22:51:20'),
+('pexels-lovely-ruby-2151623858-34072847.jpg', 'admin', 'jpg', '2026-05-23 22:51:29', '2026-05-23 22:51:29'),
+('pexels-willianjusten-21207396.jpg', 'admin', 'jpg', '2026-05-23 22:51:42', '2026-05-23 22:51:42'),
+('pexels-russell-butcher-2935498-31147719.jpg', 'admin', 'jpg', '2026-05-23 22:51:52', '2026-05-23 22:51:52'),
+('pexels-a-r-2157678326-37486134.jpg', 'admin', 'jpg', '2026-05-23 22:52:03', '2026-05-23 22:52:03'),
+('pexels-paulie-ivicic-568819821-17135781.jpg', 'admin', 'jpg', '2026-05-24 10:44:56', '2026-05-24 10:44:56')
 ON DUPLICATE KEY UPDATE
-  `owner_id` = VALUES(`owner_id`);
+  `owner_id` = VALUES(`owner_id`),
+  `extension` = VALUES(`extension`);

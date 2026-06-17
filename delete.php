@@ -16,20 +16,20 @@ AuthManager::requirePermission('delete');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     Flash::add('error', 'Akses ditolak', 'Endpoint delete hanya menerima metode POST.');
-    header('Location: dashboard.php');
+    header('Location: dashboard.php?view=library');
     exit;
 }
 
 if (!CsrfManager::validate($_POST['csrf_token'] ?? null)) {
     Flash::add('error', 'Token keamanan tidak valid', 'Permintaan delete dibatalkan demi keamanan.');
-    header('Location: dashboard.php');
+    header('Location: dashboard.php?view=library');
     exit;
 }
 
 $fileName = (string) ($_POST['file'] ?? '');
 if ($fileName === '') {
     Flash::add('error', 'Nama file tidak valid', 'Pilih file yang ingin dihapus dari tabel file.');
-    header('Location: dashboard.php');
+    header('Location: dashboard.php?view=library');
     exit;
 }
 
@@ -46,7 +46,7 @@ if ($currentUser === null || $storage->resolveFile($fileName) === null || !$owne
         'reason' => 'forbidden',
         'user_id' => AuthManager::userId(),
     ]);
-    header('Location: dashboard.php');
+    header('Location: dashboard.php?view=library');
     exit;
 }
 
@@ -81,7 +81,7 @@ if ($trashResult !== null) {
         'trash_backup' => $trashBackup,
         'user_id' => AuthManager::userId(),
     ]);
-    header('Location: dashboard.php');
+    header('Location: dashboard.php?view=library');
     exit;
 }
 
@@ -90,5 +90,5 @@ $auditLogger->log('delete', 'failed', [
     'file_name' => $fileName,
     'user_id' => AuthManager::userId(),
 ]);
-header('Location: dashboard.php');
+header('Location: dashboard.php?view=library');
 exit;

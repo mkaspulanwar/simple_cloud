@@ -4,7 +4,6 @@ declare(strict_types=1);
 require_once __DIR__ . DIRECTORY_SEPARATOR . 'bootstrap.php';
 
 use App\Security\AuthManager;
-use App\Services\CloudStorageService;
 use App\Services\FileOwnershipStore;
 use App\Support\Formatter;
 
@@ -59,13 +58,8 @@ function catalog_icon(string $name): string
     return $icons[$name] ?? $icons['image'];
 }
 
-$storage = new CloudStorageService(app_config('storage'));
 $ownershipStore = new FileOwnershipStore((string) app_config('storage.metadata_path'));
-$allFiles = $ownershipStore->attachOwners($storage->listFiles());
-$imageFiles = array_values(array_filter(
-    $allFiles,
-    static fn (array $file): bool => in_array((string) $file['extension'], ['png', 'jpg', 'jpeg', 'gif', 'webp'], true)
-));
+$imageFiles = $ownershipStore->listPublicImageFiles();
 
 $query = trim((string) ($_GET['q'] ?? ''));
 $availableTypes = array_values(array_unique(array_map(
@@ -102,8 +96,23 @@ $totalImages = count($filteredImages);
 $totalPages = max(1, (int) ceil($totalImages / $perPage));
 $page = min($page, $totalPages);
 $catalogImages = array_slice($filteredImages, ($page - 1) * $perPage, $perPage);
-$totalSize = array_sum(array_map(static fn (array $file): int => (int) $file['size'], $imageFiles));
-$latestModified = $imageFiles === [] ? null : max(array_map(static fn (array $file): int => (int) $file['modified'], $imageFiles));
+$heroSlides = array_slice($imageFiles, 0, 5);
+if ($heroSlides === []) {
+    $heroSlides = [[
+        'name' => 'Koleksi visual pilihan Cloudify',
+        'url' => 'assets/images/hero-background.jpg',
+        'title' => 'Koleksi Visual Pilihan Cloudify',
+    ]];
+} else {
+    $heroSlides = array_map(
+        static fn (array $file): array => [
+            'name' => (string) $file['name'],
+            'url' => catalog_public_preview_url((string) $file['name']),
+            'title' => ucwords(catalog_clean_title((string) $file['name'])),
+        ],
+        $heroSlides
+    );
+}
 $appName = (string) app_config('app.name', 'Cloudify');
 $currentUser = AuthManager::user();
 $loginTarget = $currentUser !== null && AuthManager::can('dashboard') ? 'dashboard.php' : 'login.php';
@@ -158,80 +167,95 @@ $loginTarget = $currentUser !== null && AuthManager::can('dashboard') ? 'dashboa
             position: sticky;
             top: 0;
             z-index: 30;
+            padding: 12px clamp(18px, 4vw, 48px);
+            background: rgba(251, 252, 253, 0.84);
+            border-bottom: 1px solid rgba(229, 233, 239, 0.86);
+            backdrop-filter: blur(20px);
+        }
+
+        .topbar-inner {
+            width: min(100%, 1280px);
+            min-height: 54px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 20px;
-            padding: 16px clamp(18px, 4vw, 48px);
-            background: rgba(251, 252, 253, 0.9);
-            border-bottom: 1px solid rgba(229, 233, 239, 0.9);
-            backdrop-filter: blur(18px);
-        }
-
-        .brand,
-        .nav-actions {
-            display: inline-flex;
-            align-items: center;
+            gap: 18px;
+            margin: 0 auto;
         }
 
         .brand {
+            min-width: max-content;
+            display: inline-flex;
+            align-items: center;
             gap: 10px;
+            color: var(--ink);
             font-weight: 900;
             text-decoration: none;
         }
 
         .brand-mark {
-            width: 38px;
-            height: 38px;
+            width: 40px;
+            height: 40px;
             display: grid;
             place-items: center;
-            border-radius: 8px;
+            border-radius: 12px;
             color: #ffffff;
-            background: var(--ink);
-            box-shadow: inset 0 -5px 0 rgba(15, 159, 143, 0.52);
+            background: linear-gradient(145deg, #14171f, #27303d);
+            box-shadow: inset 0 -5px 0 rgba(15, 159, 143, 0.56), 0 12px 26px rgba(20, 23, 31, 0.18);
+        }
+
+        .brand-name {
+            font-size: 1.08rem;
         }
 
         .nav-actions {
+            display: inline-flex;
+            align-items: center;
             justify-content: flex-end;
-            gap: 8px;
-            flex-wrap: wrap;
+            gap: 6px;
+            padding: 5px;
+            border: 1px solid rgba(229, 234, 240, 0.95);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.76);
+            box-shadow: 0 16px 40px rgba(20, 23, 31, 0.08);
         }
 
         .nav-link,
         .nav-button {
-            min-height: 42px;
+            min-height: 40px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             border-radius: 999px;
-            padding: 0 15px;
-            font-size: 0.92rem;
-            font-weight: 800;
+            padding: 0 16px;
+            font-size: 0.9rem;
+            font-weight: 850;
             text-decoration: none;
+            white-space: nowrap;
+            transition: background 160ms ease, color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
         }
 
         .nav-link {
-            color: var(--muted);
+            color: #4d5664;
         }
 
         .nav-link:hover {
             color: var(--ink);
-            background: #eef2f6;
+            background: #eef3f7;
         }
 
         .nav-button {
             color: #ffffff;
             background: var(--ink);
+            box-shadow: 0 10px 24px rgba(20, 23, 31, 0.18);
         }
 
         .catalog-hero {
-            padding: clamp(46px, 7vw, 88px) clamp(18px, 4vw, 48px) 30px;
-            background:
-                linear-gradient(90deg, rgba(251, 252, 253, 0.96), rgba(251, 252, 253, 0.8) 58%, rgba(251, 252, 253, 0.96)),
-                url("assets/images/hero-background.jpg") center / cover no-repeat;
+            overflow: hidden;
+            padding: 0 0 30px;
+            background: #f6f5f1;
         }
 
-        .catalog-hero-inner,
         .catalog-shell,
         .footer-inner {
             width: min(100%, 1280px);
@@ -239,9 +263,120 @@ $loginTarget = $currentUser !== null && AuthManager::can('dashboard') ? 'dashboa
         }
 
         .catalog-hero-inner {
+            position: relative;
             display: grid;
             justify-items: center;
+            width: 100%;
             text-align: center;
+        }
+
+        .catalog-spotlight {
+            position: relative;
+            width: 100%;
+            min-height: clamp(460px, calc(100svh - 160px), 660px);
+            display: grid;
+            align-items: end;
+            overflow: hidden;
+            margin-top: 0;
+            border-radius: 0;
+            color: #ffffff;
+            background: #101318;
+            box-shadow: none;
+        }
+
+        .catalog-spotlight::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            background:
+                linear-gradient(180deg, rgba(16, 19, 24, 0.46) 0%, rgba(16, 19, 24, 0.1) 34%, rgba(16, 19, 24, 0.78) 100%),
+                linear-gradient(90deg, rgba(16, 19, 24, 0.3), transparent 28%, transparent 72%, rgba(16, 19, 24, 0.3));
+            pointer-events: none;
+        }
+
+        .spotlight-slide {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            background-position: center;
+            background-size: cover;
+            opacity: 0;
+            transform: scale(1.035);
+            transition: opacity 700ms ease, transform 3400ms ease;
+        }
+
+        .spotlight-slide.is-active {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .catalog-spotlight-content {
+            position: relative;
+            z-index: 2;
+            display: grid;
+            justify-items: center;
+            gap: 8px;
+            width: min(100%, 1180px);
+            margin: 0 auto;
+            padding: clamp(118px, 13vw, 170px) clamp(28px, 5vw, 72px) clamp(68px, 8vw, 98px);
+            text-shadow: 0 2px 18px rgba(0, 0, 0, 0.38);
+        }
+
+        .spotlight-kicker {
+            margin: 0;
+            font-size: clamp(1rem, 1.6vw, 1.25rem);
+            font-weight: 760;
+        }
+
+        .spotlight-title {
+            max-width: 780px;
+            margin: 0;
+            font-size: clamp(2.15rem, 5vw, 4.35rem);
+            line-height: 0.98;
+            letter-spacing: 0;
+        }
+
+        .spotlight-source {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 12px;
+            font-weight: 900;
+        }
+
+        .spotlight-source-mark {
+            width: 30px;
+            height: 30px;
+            display: grid;
+            place-items: center;
+            border-radius: 999px;
+            color: #ffffff;
+            background: #d71f2b;
+            text-shadow: none;
+        }
+
+        .spotlight-dots {
+            position: absolute;
+            right: 0;
+            bottom: 30px;
+            left: 0;
+            z-index: 3;
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            pointer-events: none;
+        }
+
+        .spotlight-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.48);
+        }
+
+        .spotlight-dot.is-active {
+            background: #ffffff;
         }
 
         .eyebrow {
@@ -270,58 +405,44 @@ $loginTarget = $currentUser !== null && AuthManager::can('dashboard') ? 'dashboa
         }
 
         .catalog-controls {
-            width: min(100%, 860px);
-            margin: 26px auto 0;
+            position: relative;
+            z-index: 2;
+            width: min(100%, 1020px);
+            margin: 0 auto;
+        }
+
+        .catalog-hero-inner > .catalog-controls:first-child {
+            position: absolute;
+            top: 28px;
+            right: 50%;
+            left: auto;
+            width: min(100% - 48px, 960px);
+            margin: 0;
+            transform: translateX(50%);
+        }
+
+        .catalog-refine {
+            width: min(100%, 680px);
+            margin-top: -24px;
         }
 
         .catalog-search {
             display: grid;
             grid-template-columns: auto 1fr auto;
             align-items: center;
-            gap: 12px;
-            min-height: 64px;
-            padding: 0 10px 0 18px;
-            border: 1px solid var(--line);
-            border-radius: 8px;
+            gap: 14px;
+            min-height: 70px;
+            padding: 0 12px 0 22px;
+            border: 1px solid rgba(229, 233, 239, 0.9);
+            border-radius: 22px;
             background: #ffffff;
-            box-shadow: 0 16px 34px rgba(20, 23, 31, 0.08);
-        }
-
-        .catalog-stats {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin-top: 18px;
-        }
-
-        .stat-pill {
-            min-height: 42px;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 0 13px;
-            border: 1px solid rgba(229, 233, 239, 0.92);
-            border-radius: 999px;
-            color: #3f4855;
-            background: rgba(255, 255, 255, 0.86);
-            font-size: 0.92rem;
-            font-weight: 850;
-            box-shadow: 0 10px 24px rgba(20, 23, 31, 0.06);
-            backdrop-filter: blur(14px);
-        }
-
-        .stat-pill svg {
-            width: 17px;
-            height: 17px;
-            color: var(--brand-dark);
+            box-shadow: 0 18px 42px rgba(20, 23, 31, 0.12);
         }
 
         .catalog-search > svg {
-            width: 24px;
-            height: 24px;
-            color: var(--brand-dark);
+            width: 25px;
+            height: 25px;
+            color: #242832;
         }
 
         .catalog-search input {
@@ -332,16 +453,20 @@ $loginTarget = $currentUser !== null && AuthManager::can('dashboard') ? 'dashboa
             color: var(--ink);
             background: transparent;
             font: inherit;
-            font-size: 1rem;
+            font-size: 1.08rem;
+        }
+
+        .catalog-search input::placeholder {
+            color: #737b87;
         }
 
         .search-button {
             min-height: 46px;
             border: 0;
-            border-radius: 8px;
-            padding: 0 18px;
+            border-radius: 16px;
+            padding: 0 20px;
             color: #ffffff;
-            background: var(--brand);
+            background: var(--ink);
             cursor: pointer;
             font: inherit;
             font-weight: 900;
@@ -351,9 +476,15 @@ $loginTarget = $currentUser !== null && AuthManager::can('dashboard') ? 'dashboa
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            gap: 8px;
             flex-wrap: wrap;
-            margin-top: 12px;
+            margin-top: 0;
+            padding: 8px;
+            border: 1px solid rgba(229, 233, 239, 0.9);
+            border-radius: 22px;
+            background: rgba(255, 255, 255, 0.92);
+            box-shadow: 0 18px 40px rgba(20, 23, 31, 0.12);
+            backdrop-filter: blur(16px);
         }
 
         .filter-field {
@@ -362,12 +493,12 @@ $loginTarget = $currentUser !== null && AuthManager::can('dashboard') ? 'dashboa
             align-items: center;
             gap: 8px;
             padding: 0 12px;
-            border: 1px solid rgba(229, 233, 239, 0.92);
-            border-radius: 999px;
+            border: 0;
+            border-radius: 16px;
             color: #3f4855;
-            background: rgba(255, 255, 255, 0.9);
+            background: #f5f7f9;
             font-weight: 850;
-            box-shadow: 0 10px 24px rgba(20, 23, 31, 0.05);
+            box-shadow: none;
         }
 
         .filter-field svg {
@@ -391,10 +522,10 @@ $loginTarget = $currentUser !== null && AuthManager::can('dashboard') ? 'dashboa
             align-items: center;
             justify-content: center;
             padding: 0 14px;
-            border: 1px solid var(--line);
-            border-radius: 999px;
+            border: 0;
+            border-radius: 16px;
             color: var(--muted);
-            background: #ffffff;
+            background: #f5f7f9;
             font-weight: 850;
             text-decoration: none;
         }
@@ -423,20 +554,6 @@ $loginTarget = $currentUser !== null && AuthManager::can('dashboard') ? 'dashboa
             margin: 8px 0 0;
             color: var(--muted);
             line-height: 1.6;
-        }
-
-        .result-chip {
-            min-height: 42px;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 0 13px;
-            border: 1px solid var(--line);
-            border-radius: 999px;
-            color: #46505d;
-            background: #ffffff;
-            font-weight: 850;
-            white-space: nowrap;
         }
 
         .asset-grid {
@@ -830,17 +947,23 @@ $loginTarget = $currentUser !== null && AuthManager::can('dashboard') ? 'dashboa
         }
 
         .footer {
-            margin-top: 58px;
-            padding: 30px clamp(18px, 4vw, 48px);
-            color: #dfe5ed;
-            background: var(--ink);
+            position: relative;
+            overflow: hidden;
+            margin-top: 70px;
+            padding: 56px clamp(18px, 4vw, 48px) 24px;
+            color: #edf3f7;
+            background:
+                radial-gradient(circle at 12% 8%, rgba(15, 159, 143, 0.2), transparent 32%),
+                linear-gradient(145deg, #101318, #18202b 56%, #101318);
         }
 
         .footer-inner {
+            position: relative;
+            z-index: 1;
             display: grid;
-            grid-template-columns: minmax(0, 1fr) auto;
-            gap: 24px;
-            align-items: center;
+            grid-template-columns: minmax(260px, 1.35fr) repeat(3, minmax(150px, 0.55fr));
+            gap: clamp(24px, 4vw, 58px);
+            align-items: start;
         }
 
         .footer .brand {
@@ -850,36 +973,93 @@ $loginTarget = $currentUser !== null && AuthManager::can('dashboard') ? 'dashboa
         .footer .brand-mark {
             color: var(--ink);
             background: #ffffff;
+            box-shadow: inset 0 -5px 0 rgba(15, 159, 143, 0.45);
         }
 
         .footer p {
-            max-width: 580px;
-            margin: 10px 0 0;
+            max-width: 470px;
+            margin: 14px 0 0;
             color: #aeb8c4;
-            line-height: 1.62;
+            line-height: 1.7;
         }
 
-        .footer-links {
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-            gap: 8px;
-            flex-wrap: wrap;
+        .footer-title {
+            margin: 4px 0 14px;
+            color: #ffffff;
+            font-size: 0.82rem;
+            font-weight: 900;
+            text-transform: uppercase;
         }
 
-        .footer-links a {
-            padding: 9px 11px;
-            border-radius: 8px;
-            color: #dfe5ed;
+        .footer-links,
+        .footer-social {
+            display: grid;
+            gap: 9px;
+        }
+
+        .footer-links a,
+        .footer-social a {
+            width: fit-content;
+            color: #c5ced8;
             text-decoration: none;
-            font-weight: 800;
+            font-weight: 780;
+            line-height: 1.45;
+            transition: color 160ms ease, transform 160ms ease;
         }
 
-        .footer-links a:hover {
-            background: rgba(255, 255, 255, 0.08);
+        .footer-links a:hover,
+        .footer-social a:hover {
+            color: #ffffff;
+            transform: translateX(2px);
+        }
+
+        .footer-social a {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .social-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 999px;
+            background: var(--brand);
+            box-shadow: 0 0 0 5px rgba(15, 159, 143, 0.12);
+        }
+
+        .footer-bottom {
+            position: relative;
+            z-index: 1;
+            width: min(100%, 1280px);
+            display: flex;
+            align-items: end;
+            justify-content: space-between;
+            gap: 18px;
+            margin: 48px auto 0;
+            padding-top: 22px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: #8f9aaa;
+            font-size: 0.9rem;
+            font-weight: 760;
+        }
+
+        .footer-wordmark {
+            position: relative;
+            z-index: 0;
+            width: min(100%, 1280px);
+            margin: 18px auto -38px;
+            color: rgba(255, 255, 255, 0.045);
+            font-size: clamp(3.4rem, 13vw, 11rem);
+            font-weight: 950;
+            line-height: 0.8;
+            pointer-events: none;
         }
 
         @media (max-width: 1040px) {
+            .footer-inner {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
             .asset-grid {
                 column-count: 3;
             }
@@ -887,50 +1067,213 @@ $loginTarget = $currentUser !== null && AuthManager::can('dashboard') ? 'dashboa
 
         @media (max-width: 760px) {
             .topbar {
-                padding: 12px 14px;
+                padding: 10px 14px;
+            }
+
+            .topbar-inner {
+                min-height: 48px;
+                align-items: center;
+                flex-direction: row;
+                gap: 12px;
+            }
+
+            .nav-actions {
+                width: auto;
+                max-width: calc(100vw - 82px);
+                margin-left: auto;
+                justify-content: flex-end;
+                overflow-x: auto;
+                border-radius: 999px;
+                scrollbar-width: none;
+            }
+
+            .nav-actions::-webkit-scrollbar {
+                display: none;
+            }
+
+            .nav-link,
+            .nav-button {
+                min-height: 38px;
+                padding: 0 13px;
+                font-size: 0.84rem;
             }
 
             .brand-name {
                 display: none;
             }
 
+            .catalog-hero {
+                overflow-x: clip;
+                padding: 0 0 24px;
+            }
+
+            .catalog-controls {
+                width: min(100% - 28px, 520px);
+            }
+
+            .catalog-hero-inner > .catalog-controls:first-child {
+                top: 16px;
+                right: 14px;
+                left: 14px;
+                width: auto;
+                transform: none;
+            }
+
             .catalog-search {
                 grid-template-columns: auto 1fr;
-                padding: 12px 14px;
+                gap: 10px;
+                min-height: 62px;
+                padding: 0 18px;
+                border-radius: 18px;
+            }
+
+            .catalog-search > svg {
+                width: 22px;
+                height: 22px;
+            }
+
+            .catalog-search input {
+                font-size: 1.04rem;
             }
 
             .search-button {
-                grid-column: 1 / -1;
+                position: absolute;
+                width: 1px;
+                height: 1px;
+                overflow: hidden;
+                padding: 0;
+                clip: rect(0, 0, 0, 0);
+                white-space: nowrap;
+            }
+
+            .catalog-spotlight {
+                min-height: 0;
+                aspect-ratio: 0.82;
                 width: 100%;
+                max-width: 100%;
+                margin-top: 0;
+                margin-right: 0;
+                margin-left: 0;
+                border-radius: 0;
+                box-shadow: none;
+            }
+
+            .catalog-spotlight::after {
+                background: linear-gradient(180deg, rgba(16, 19, 24, 0.34) 0%, rgba(16, 19, 24, 0.08) 33%, rgba(16, 19, 24, 0.78) 100%);
+            }
+
+            .catalog-spotlight-content {
+                gap: 7px;
+                padding: 112px 22px 48px;
+            }
+
+            .spotlight-kicker {
+                font-size: 1rem;
+            }
+
+            .spotlight-title {
+                max-width: 340px;
+                font-size: clamp(1.8rem, 9vw, 2.45rem);
+                line-height: 1.03;
+            }
+
+            .spotlight-source {
+                margin-top: 8px;
+                font-size: 0.9rem;
+            }
+
+            .spotlight-source-mark {
+                width: 27px;
+                height: 27px;
+            }
+
+            .spotlight-dots {
+                bottom: 18px;
+            }
+
+            .catalog-refine {
+                width: min(100% - 28px, 520px);
+                margin-top: -22px;
             }
 
             .catalog-head {
                 display: block;
             }
 
-            .result-chip {
-                margin-top: 14px;
-            }
-
-            .stat-pill {
-                width: 100%;
-                justify-content: center;
-            }
-
             .catalog-filters {
-                align-items: stretch;
-                flex-direction: column;
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 8px;
+                margin-top: 0;
+                padding: 7px;
+                border-radius: 18px;
             }
 
             .filter-field,
             .reset-link {
                 width: 100%;
                 justify-content: center;
+                min-height: 42px;
+                padding: 0 10px;
+                font-size: 0.86rem;
+                border-radius: 13px;
+            }
+
+            .reset-link {
+                grid-column: 1 / -1;
+            }
+
+            .catalog {
+                padding-top: 30px;
             }
 
             .asset-grid {
-                column-count: 1;
-                column-gap: 0;
+                column-count: 2;
+                column-gap: 10px;
+            }
+
+            .asset-item {
+                margin-bottom: 14px;
+            }
+
+            .asset-thumb {
+                border-radius: 12px;
+                box-shadow: none;
+            }
+
+            .asset-badge,
+            .asset-meta,
+            .asset-uploader {
+                display: none;
+            }
+
+            .asset-info {
+                grid-template-columns: minmax(0, 1fr) auto;
+                gap: 6px;
+                padding-top: 7px;
+            }
+
+            .asset-title {
+                font-size: 0.82rem;
+                font-weight: 850;
+                line-height: 1.25;
+                white-space: normal;
+            }
+
+            .asset-action {
+                width: 28px;
+                height: 28px;
+                color: var(--ink);
+                background: transparent;
+            }
+
+            .asset-info .asset-action:last-of-type {
+                display: none;
+            }
+
+            .asset-item:hover .asset-thumb {
+                transform: none;
+                box-shadow: none;
             }
 
             .preview-stage {
@@ -954,44 +1297,75 @@ $loginTarget = $currentUser !== null && AuthManager::can('dashboard') ? 'dashboa
                 grid-template-columns: 1fr;
             }
 
-            .footer-links {
-                justify-content: flex-start;
+            .footer-bottom {
+                align-items: flex-start;
+                flex-direction: column;
+                margin-top: 32px;
+            }
+
+            .footer-wordmark {
+                margin-bottom: -22px;
             }
         }
     </style>
 </head>
 <body>
     <header class="topbar">
-        <a class="brand" href="index.php" aria-label="<?= htmlspecialchars($appName); ?>">
-            <span class="brand-mark">C</span>
-            <span class="brand-name"><?= htmlspecialchars($appName); ?></span>
-        </a>
-        <nav class="nav-actions" aria-label="Navigasi utama">
-            <a class="nav-link" href="index.php">Home</a>
-            <?php if ($currentUser !== null && AuthManager::can('dashboard')): ?>
-                <a class="nav-link" href="dashboard.php">Dashboard</a>
-                <a class="nav-button" href="logout.php">Keluar</a>
-            <?php elseif ($currentUser !== null): ?>
-                <a class="nav-button" href="logout.php">Keluar</a>
-            <?php else: ?>
-                <a class="nav-button" href="login.php">Login</a>
-            <?php endif; ?>
-        </nav>
+        <div class="topbar-inner">
+            <a class="brand" href="index.php" aria-label="<?= htmlspecialchars($appName); ?>">
+                <span class="brand-mark">C</span>
+                <span class="brand-name"><?= htmlspecialchars($appName); ?></span>
+            </a>
+            <nav class="nav-actions" aria-label="Navigasi utama">
+                <a class="nav-link" href="index.php">Home</a>
+                <?php if ($currentUser !== null && AuthManager::can('dashboard')): ?>
+                    <a class="nav-link" href="dashboard.php">Dashboard</a>
+                    <a class="nav-button" href="logout.php">Keluar</a>
+                <?php elseif ($currentUser !== null): ?>
+                    <a class="nav-button" href="logout.php">Keluar</a>
+                <?php else: ?>
+                    <a class="nav-button" href="login.php">Login</a>
+                <?php endif; ?>
+            </nav>
+        </div>
     </header>
 
     <main>
         <section class="catalog-hero">
             <div class="catalog-hero-inner">
-                <p class="eyebrow">Katalog visual</p>
-                <h1>Semua gambar dalam satu halaman khusus.</h1>
-                <p class="hero-copy">Telusuri koleksi, buka preview, dan unduh aset gambar tanpa masuk ke dashboard.</p>
-
                 <form class="catalog-controls" action="catalog.php" method="get">
                     <div class="catalog-search">
                         <?= catalog_icon('search'); ?>
-                        <input type="search" name="q" value="<?= htmlspecialchars($query); ?>" placeholder="Cari nama file atau koleksi..." aria-label="Cari aset visual">
+                        <input type="search" name="q" value="<?= htmlspecialchars($query); ?>" placeholder="Search" aria-label="Cari aset visual">
                         <button class="search-button" type="submit">Cari</button>
                     </div>
+                </form>
+
+                <div class="catalog-spotlight" aria-label="Sorotan katalog">
+                    <?php foreach ($heroSlides as $index => $slide): ?>
+                        <div
+                            class="spotlight-slide<?= $index === 0 ? ' is-active' : ''; ?>"
+                            style="background-image: url('<?= htmlspecialchars((string) $slide['url']); ?>');"
+                            data-slide-title="<?= htmlspecialchars((string) $slide['title']); ?>"
+                            aria-hidden="true"
+                        ></div>
+                    <?php endforeach; ?>
+                    <div class="catalog-spotlight-content">
+                        <p class="spotlight-kicker">Cloudify ideas</p>
+                        <h1 class="spotlight-title" id="spotlightTitle"><?= htmlspecialchars((string) $heroSlides[0]['title']); ?></h1>
+                        <span class="spotlight-source"><span class="spotlight-source-mark">C</span> Inspiration board</span>
+                    </div>
+                    <div class="spotlight-dots" aria-hidden="true">
+                        <?php foreach ($heroSlides as $index => $_slide): ?>
+                            <span class="spotlight-dot<?= $index === 0 ? ' is-active' : ''; ?>" data-slide-dot></span>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+
+                <form class="catalog-controls catalog-refine" action="catalog.php" method="get">
+                    <?php if ($query !== ''): ?>
+                        <input type="hidden" name="q" value="<?= htmlspecialchars($query); ?>">
+                    <?php endif; ?>
                     <div class="catalog-filters" aria-label="Filter katalog">
                         <label class="filter-field">
                             <?= catalog_icon('filter'); ?>
@@ -1018,11 +1392,6 @@ $loginTarget = $currentUser !== null && AuthManager::can('dashboard') ? 'dashboa
                         <?php endif; ?>
                     </div>
                 </form>
-                <div class="catalog-stats" aria-label="Ringkasan katalog">
-                    <span class="stat-pill"><?= catalog_icon('image'); ?> <?= count($imageFiles); ?> gambar</span>
-                    <span class="stat-pill"><?= catalog_icon('download'); ?> <?= Formatter::bytes((int) $totalSize); ?></span>
-                    <span class="stat-pill"><?= catalog_icon('clock'); ?> <?= $latestModified === null ? 'Belum ada unggahan' : Formatter::datetime((int) $latestModified); ?></span>
-                </div>
             </div>
         </section>
 
@@ -1034,7 +1403,6 @@ $loginTarget = $currentUser !== null && AuthManager::can('dashboard') ? 'dashboa
                         <h2>Katalog gambar</h2>
                         <p><?= $totalImages; ?> aset ditemukan<?= $query !== '' ? ' untuk "' . htmlspecialchars($query) . '"' : ''; ?><?= $type !== 'all' ? ' dengan format ' . htmlspecialchars(strtoupper($type)) : ''; ?>. Halaman <?= $page; ?> dari <?= $totalPages; ?>.</p>
                     </div>
-                    <span class="result-chip"><?= catalog_icon('image'); ?> <?= $totalImages; ?> gambar</span>
                 </div>
 
                 <?php if ($catalogImages === []): ?>
@@ -1152,21 +1520,69 @@ $loginTarget = $currentUser !== null && AuthManager::can('dashboard') ? 'dashboa
 
     <footer class="footer">
         <div class="footer-inner">
-            <div>
+            <section>
                 <a class="brand" href="index.php">
                     <span class="brand-mark">C</span>
                     <span class="brand-name"><?= htmlspecialchars($appName); ?></span>
                 </a>
-                <p>Katalog khusus untuk menemukan, melihat, dan mengunduh aset gambar dari satu tempat.</p>
-            </div>
-            <nav class="footer-links" aria-label="Footer navigation">
+                <p>Cloudify membantu kamu menemukan, mengkurasi, dan membagikan inspirasi visual dari satu library yang ringan dan cepat.</p>
+            </section>
+            <nav class="footer-links" aria-label="Navigasi footer">
+                <h2 class="footer-title">Navigasi</h2>
                 <a href="index.php">Home</a>
+                <a href="catalog.php">Katalog</a>
                 <a href="<?= htmlspecialchars($loginTarget); ?>"><?= $currentUser === null ? 'Login' : 'Workspace'; ?></a>
             </nav>
+            <nav class="footer-links" aria-label="Eksplorasi">
+                <h2 class="footer-title">Eksplorasi</h2>
+                <a href="catalog.php">Inspirasi</a>
+                <a href="catalog.php?sort=newest">Terbaru</a>
+                <a href="catalog.php?type=all">Semua gambar</a>
+            </nav>
+            <nav class="footer-social" aria-label="Social media">
+                <h2 class="footer-title">Social</h2>
+                <a href="#" aria-label="Instagram Cloudify"><span class="social-dot"></span>Instagram</a>
+                <a href="#" aria-label="Dribbble Cloudify"><span class="social-dot"></span>Dribbble</a>
+                <a href="#" aria-label="Behance Cloudify"><span class="social-dot"></span>Behance</a>
+            </nav>
         </div>
+        <div class="footer-bottom">
+            <span>&copy; <?= date('Y'); ?> <?= htmlspecialchars($appName); ?>. All rights reserved.</span>
+            <span>Visual library for ideas, design, and moodboards.</span>
+        </div>
+        <div class="footer-wordmark" aria-hidden="true">CLOUDIFY</div>
     </footer>
 
     <script>
+        (() => {
+            const slides = Array.from(document.querySelectorAll('.spotlight-slide'));
+            const dots = Array.from(document.querySelectorAll('[data-slide-dot]'));
+            const title = document.getElementById('spotlightTitle');
+
+            if (slides.length <= 1 || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                return;
+            }
+
+            let current = 0;
+
+            function showSlide(next) {
+                slides[current].classList.remove('is-active');
+                dots[current]?.classList.remove('is-active');
+                current = next;
+                slides[current].classList.add('is-active');
+                dots[current]?.classList.add('is-active');
+
+                const nextTitle = slides[current].getAttribute('data-slide-title');
+                if (title && nextTitle) {
+                    title.textContent = nextTitle;
+                }
+            }
+
+            window.setInterval(() => {
+                showSlide((current + 1) % slides.length);
+            }, 3000);
+        })();
+
         (() => {
             const modal = document.getElementById('previewModal');
             const image = document.getElementById('previewImage');

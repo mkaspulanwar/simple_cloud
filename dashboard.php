@@ -88,7 +88,7 @@ if (!AuthManager::can('dashboard')) {
     exit;
 }
 
-$files = $ownershipStore->filterFilesForUser($storage->listFiles(), $currentUser);
+$files = $ownershipStore->listFilesForUser($currentUser);
 $stats = $storage->getStatsForFiles($files);
 $messages = Flash::pull();
 $eventLimit = (int) app_config('audit.max_preview_events', 8);
@@ -125,6 +125,14 @@ $roleCounts = $userStore->countsByRole();
 $manageableRoles = $userStore->roles();
 $dashboardLayout = dashboard_layout_context($currentUser, $appName);
 $roleLabels = $dashboardLayout['roleLabels'];
+$dashboardMenuItems = dashboard_menu_items($dashboardLayout);
+$allowedDashboardViews = array_values(array_map(
+    static fn (array $item): string => (string) $item['key'],
+    array_filter($dashboardMenuItems, static fn (array $item): bool => (bool) $item['internal'])
+));
+$activeView = strtolower(trim((string) ($_GET['view'] ?? 'overview')));
+$activeView = $activeView === 'upload' ? 'library' : $activeView;
+$activeView = in_array($activeView, $allowedDashboardViews, true) ? $activeView : 'overview';
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -1680,9 +1688,13 @@ $roleLabels = $dashboardLayout['roleLabels'];
         }
 
         .dashboard-sidebar {
-            position: sticky;
+            position: fixed;
             top: 0;
+            left: 0;
+            z-index: 50;
+            width: 272px;
             height: 100vh;
+            overflow: hidden;
             display: flex;
             flex-direction: column;
             gap: 18px;
@@ -1690,6 +1702,20 @@ $roleLabels = $dashboardLayout['roleLabels'];
             color: #d6dde8;
             background: var(--dash-sidebar);
             border-right: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .dashboard-sidebar .sidebar-block {
+            min-height: 0;
+        }
+
+        .dashboard-sidebar .sidebar-block:first-of-type {
+            overflow-y: auto;
+            padding-right: 2px;
+            scrollbar-width: thin;
+        }
+
+        .dashboard-mobile-nav {
+            display: none;
         }
 
         .dashboard-brand {
@@ -1821,6 +1847,7 @@ $roleLabels = $dashboardLayout['roleLabels'];
 
         .dashboard-main {
             min-width: 0;
+            grid-column: 2;
             padding: 24px;
         }
 
@@ -2507,6 +2534,10 @@ $roleLabels = $dashboardLayout['roleLabels'];
                 grid-template-columns: 232px minmax(0, 1fr);
             }
 
+            .dashboard-sidebar {
+                width: 232px;
+            }
+
             .stats,
             .file-grid {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2523,43 +2554,208 @@ $roleLabels = $dashboardLayout['roleLabels'];
             }
 
             .dashboard-sidebar {
-                position: static;
-                height: auto;
-                padding: 14px;
-                gap: 10px;
+                display: none !important;
             }
 
-            .sidebar-block {
+            .dashboard-mobile-nav {
+                position: sticky;
+                top: 0;
+                z-index: 60;
                 display: flex;
-                gap: 8px;
-                overflow-x: auto;
-                padding-bottom: 2px;
-                scrollbar-width: thin;
+                align-items: center;
+                justify-content: space-between;
+                gap: 12px;
+                padding: 10px 14px;
+                color: #ffffff;
+                background: var(--dash-sidebar);
+                box-shadow: 0 12px 30px rgba(17, 24, 39, 0.18);
             }
 
-            .sidebar-label {
-                display: none;
+            .mobile-dashboard-brand {
+                min-width: 0;
+                display: inline-flex;
+                align-items: center;
+                gap: 10px;
+                color: #ffffff;
+                text-decoration: none;
             }
 
-            .sidebar-link {
-                flex: 0 0 auto;
-                min-height: 38px;
-                padding-right: 12px;
+            .mobile-dashboard-brand span:last-child {
+                min-width: 0;
+                display: grid;
+            }
+
+            .mobile-dashboard-brand strong,
+            .mobile-dashboard-brand small {
+                overflow: hidden;
+                text-overflow: ellipsis;
                 white-space: nowrap;
             }
 
-            .sidebar-account {
-                margin-top: 0;
-                grid-template-columns: minmax(0, 1fr) auto;
-                align-items: center;
-                padding: 10px;
+            .mobile-dashboard-brand small {
+                color: #9aa6b6;
+                font-weight: 800;
             }
 
-            .sidebar-logout {
-                min-width: 96px;
+            .mobile-menu {
+                flex: 0 0 auto;
+            }
+
+            .mobile-menu summary {
+                width: 44px;
+                height: 44px;
+                position: relative;
+                display: grid;
+                place-items: center;
+                border-radius: 10px;
+                background: rgba(255, 255, 255, 0.08);
+                cursor: pointer;
+                list-style: none;
+                transition: background 180ms ease;
+            }
+
+            .mobile-menu summary::-webkit-details-marker {
+                display: none;
+            }
+
+            .mobile-menu summary span {
+                position: absolute;
+                width: 19px;
+                height: 2px;
+                border-radius: 999px;
+                background: #ffffff;
+                transition: transform 220ms ease, opacity 180ms ease;
+            }
+
+            .mobile-menu summary span:nth-child(1) {
+                transform: translateY(-5px);
+            }
+
+            .mobile-menu summary span:nth-child(2) {
+                display: none;
+            }
+
+            .mobile-menu summary span:nth-child(3) {
+                transform: translateY(5px);
+            }
+
+            .mobile-menu[open] summary {
+                background: rgba(255, 255, 255, 0.14);
+            }
+
+            .mobile-menu[open] summary span:nth-child(1) {
+                transform: rotate(45deg);
+            }
+
+            .mobile-menu[open] summary span:nth-child(3) {
+                transform: rotate(-45deg);
+            }
+
+            .mobile-menu-panel {
+                position: fixed;
+                top: 64px;
+                right: 0;
+                left: 0;
+                display: grid;
+                grid-template-rows: auto minmax(0, 1fr) auto;
+                gap: 16px;
+                max-height: min(68svh, 560px);
+                overflow: hidden;
+                padding: 18px;
+                border: 0;
+                border-radius: 0;
+                background: #111827;
+                box-shadow: 0 18px 40px rgba(17, 24, 39, 0.22);
+                opacity: 0;
+                transform: translateY(-10px);
+                transition: opacity 220ms ease, transform 220ms ease;
+            }
+
+            .mobile-menu[open] .mobile-menu-panel {
+                opacity: 1;
+                transform: translateY(0);
+            }
+
+            .mobile-account {
+                padding: 10px;
+                border-radius: 10px;
+                background: rgba(255, 255, 255, 0.05);
+            }
+
+            .mobile-account strong,
+            .mobile-account span {
+                display: block;
+            }
+
+            .mobile-account span {
+                margin-top: 2px;
+                color: #9aa6b6;
+                font-size: 0.85rem;
+                font-weight: 800;
+            }
+
+            .mobile-menu-links,
+            .mobile-menu-actions {
+                display: grid;
+                gap: 8px;
+            }
+
+            .mobile-menu-links {
+                align-content: start;
+                overflow-y: auto;
+                padding-right: 2px;
+                scrollbar-width: thin;
+            }
+
+            .mobile-menu-panel a {
+                min-height: 52px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 10px;
+                padding: 0 14px;
+                border-radius: 12px;
+                color: #d6dde8;
+                text-decoration: none;
+                font-weight: 850;
+                transition: background 160ms ease, color 160ms ease, transform 160ms ease;
+            }
+
+            .mobile-menu-panel a.is-active,
+            .mobile-menu-panel a:hover {
+                color: #ffffff;
+                background: var(--dash-sidebar-soft);
+            }
+
+            .mobile-menu-panel a span {
+                width: 28px;
+                height: 28px;
+                display: grid;
+                place-items: center;
+                border-radius: 8px;
+                color: #d9f8f4;
+                background: rgba(15, 143, 131, 0.18);
+                font-size: 0.72rem;
+                font-weight: 900;
+            }
+
+            .mobile-menu-actions {
+                padding-top: 12px;
+                border-top: 1px solid rgba(255, 255, 255, 0.08);
+            }
+
+            .mobile-menu-actions a {
+                justify-content: flex-start;
+                background: rgba(255, 255, 255, 0.06);
+            }
+
+            .mobile-menu-actions a:last-child {
+                color: #ffffff;
+                background: rgba(239, 68, 68, 0.18);
             }
 
             .dashboard-main {
+                grid-column: auto;
                 padding: 16px 14px 28px;
             }
 
@@ -2655,10 +2851,12 @@ $roleLabels = $dashboardLayout['roleLabels'];
 </head>
 <body>
     <div class="dashboard-shell">
-        <?php render_dashboard_sidebar($dashboardLayout, 'overview'); ?>
+        <?php render_dashboard_sidebar($dashboardLayout, $activeView); ?>
+        <?php render_dashboard_mobile_nav($dashboardLayout, $activeView); ?>
 
         <div class="dashboard-main">
             <main class="layout">
+                <?php if ($activeView === 'overview'): ?>
                 <?php render_dashboard_top_panel($dashboardLayout); ?>
 
                 <section class="stats">
@@ -2683,6 +2881,7 @@ $roleLabels = $dashboardLayout['roleLabels'];
                         <small><?= htmlspecialchars((string) $lanUrl); ?></small>
                     </article>
                 </section>
+                <?php endif; ?>
 
         <?php foreach ($messages as $message): ?>
             <section class="flash <?= htmlspecialchars((string) ($message['type'] ?? '')); ?>">
@@ -2693,7 +2892,7 @@ $roleLabels = $dashboardLayout['roleLabels'];
             </section>
         <?php endforeach; ?>
 
-        <?php if ($canUpload): ?>
+        <?php if ($activeView === 'library' && $canUpload): ?>
             <section class="panel" id="upload-panel">
                 <div class="panel-head">
                     <div>
@@ -2708,23 +2907,9 @@ $roleLabels = $dashboardLayout['roleLabels'];
                     <button class="btn btn-primary" type="submit">Upload Gambar</button>
                 </form>
             </section>
-        <?php else: ?>
-            <section class="panel" id="upload-panel">
-                <div class="panel-head">
-                    <div>
-                        <h2>Upload Management</h2>
-                        <p>Status akses upload untuk akun saat ini.</p>
-                    </div>
-                    <span class="panel-count">Limited</span>
-                </div>
-                <div class="access-note">
-                    <span aria-hidden="true">i</span>
-                    <span>Role <?= htmlspecialchars($roleLabels[$currentUser['role']] ?? ucfirst($currentUser['role'])); ?> berjalan dalam mode terbatas. Akun ini tidak dapat upload, read/download, edit/rename, atau delete file.</span>
-                </div>
-            </section>
         <?php endif; ?>
 
-        <?php if ($canManageUsers): ?>
+        <?php if ($activeView === 'users' && $canManageUsers): ?>
             <section class="panel" id="users-panel">
                 <div class="panel-head">
                     <div>
@@ -2825,7 +3010,7 @@ $roleLabels = $dashboardLayout['roleLabels'];
             </section>
         <?php endif; ?>
 
-        <?php if ($canBackup): ?>
+        <?php if ($activeView === 'backup' && $canBackup): ?>
             <section class="panel" id="backup-panel">
                 <div class="panel-head">
                     <div>
@@ -2849,6 +3034,7 @@ $roleLabels = $dashboardLayout['roleLabels'];
             </section>
         <?php endif; ?>
 
+        <?php if ($activeView === 'library'): ?>
         <section class="panel" id="library-panel">
             <div class="panel-head">
                 <div>
@@ -3000,8 +3186,9 @@ $roleLabels = $dashboardLayout['roleLabels'];
                 </div>
             <?php endif; ?>
         </section>
+        <?php endif; ?>
 
-        <?php if ($canViewAudit): ?>
+        <?php if ($activeView === 'audit' && $canViewAudit): ?>
             <section class="panel" id="audit-panel">
                 <div class="panel-head">
                     <div>
@@ -3067,23 +3254,6 @@ $roleLabels = $dashboardLayout['roleLabels'];
 
     <script>
         (function () {
-            const menuByHash = {
-                '#upload-panel': 'upload',
-                '#users-panel': 'users',
-                '#library-panel': 'library',
-                '#audit-panel': 'audit'
-            };
-
-            function syncSidebarMenu() {
-                const activeMenu = menuByHash[window.location.hash] || 'overview';
-                document.querySelectorAll('.sidebar-link[data-menu]').forEach(function (link) {
-                    link.classList.toggle('is-active', link.getAttribute('data-menu') === activeMenu);
-                });
-            }
-
-            syncSidebarMenu();
-            window.addEventListener('hashchange', syncSidebarMenu);
-
             const searchInput = document.getElementById('fileSearch');
             const resultText = document.getElementById('resultText');
             const viewButtons = document.querySelectorAll('[data-view-target]');

@@ -4,7 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . DIRECTORY_SEPARATOR . 'bootstrap.php';
 
 use App\Security\AuthManager;
-use App\Services\CloudStorageService;
+use App\Services\FileOwnershipStore;
 use App\Support\Flash;
 use App\Support\Formatter;
 
@@ -57,12 +57,8 @@ function home_icon(string $name): string
     return $icons[$name] ?? $icons['image'];
 }
 
-$storage = new CloudStorageService(app_config('storage'));
-$allFiles = $storage->listFiles();
-$imageFiles = array_values(array_filter(
-    $allFiles,
-    static fn (array $file): bool => in_array((string) $file['extension'], ['png', 'jpg', 'jpeg', 'gif', 'webp'], true)
-));
+$ownershipStore = new FileOwnershipStore((string) app_config('storage.metadata_path'));
+$imageFiles = $ownershipStore->listPublicImageFiles();
 
 $query = trim((string) ($_GET['q'] ?? ''));
 $page = max(1, (int) ($_GET['page'] ?? 1));
@@ -149,73 +145,87 @@ $categories = [
             position: sticky;
             top: 0;
             z-index: 30;
+            padding: 12px clamp(20px, 4vw, 48px);
+            background: rgba(251, 252, 253, 0.82);
+            border-bottom: 1px solid rgba(230, 234, 240, 0.82);
+            backdrop-filter: blur(20px);
+        }
+
+        .topbar-inner {
+            width: min(100%, 1280px);
+            min-height: 54px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 20px;
-            padding: 16px clamp(20px, 4vw, 48px);
-            background: rgba(251, 252, 253, 0.86);
-            border-bottom: 1px solid rgba(230, 234, 240, 0.88);
-            backdrop-filter: blur(18px);
+            gap: 18px;
+            margin: 0 auto;
         }
 
         .brand {
+            min-width: max-content;
             display: inline-flex;
             align-items: center;
             gap: 10px;
+            color: var(--ink);
             font-weight: 900;
             text-decoration: none;
         }
 
         .brand-mark {
-            width: 38px;
-            height: 38px;
+            width: 40px;
+            height: 40px;
             display: grid;
             place-items: center;
-            border-radius: 8px;
+            border-radius: 12px;
             color: #ffffff;
-            background: #14171f;
-            box-shadow: inset 0 -5px 0 rgba(15, 159, 143, 0.52);
+            background: linear-gradient(145deg, #14171f, #27303d);
+            box-shadow: inset 0 -5px 0 rgba(15, 159, 143, 0.56), 0 12px 26px rgba(20, 23, 31, 0.18);
         }
 
         .brand-name {
-            font-size: 1.05rem;
+            font-size: 1.08rem;
         }
 
         .nav-actions {
-            display: flex;
-            justify-content: flex-end;
+            display: inline-flex;
             align-items: center;
-            gap: 8px;
-            flex-wrap: wrap;
+            justify-content: flex-end;
+            gap: 6px;
+            padding: 5px;
+            border: 1px solid rgba(229, 234, 240, 0.95);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.74);
+            box-shadow: 0 16px 40px rgba(20, 23, 31, 0.08);
         }
 
         .nav-link,
         .nav-button {
-            min-height: 42px;
+            min-height: 40px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             border-radius: 999px;
-            padding: 0 15px;
-            font-size: 0.92rem;
-            font-weight: 800;
+            padding: 0 16px;
+            font-size: 0.9rem;
+            font-weight: 850;
             text-decoration: none;
-            transition: background 160ms ease, color 160ms ease, transform 160ms ease;
+            white-space: nowrap;
+            transition: background 160ms ease, color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
         }
 
         .nav-link {
-            color: var(--muted);
+            color: #4d5664;
         }
 
         .nav-link:hover {
             color: var(--ink);
-            background: #eef2f6;
+            background: #eef3f7;
         }
 
         .nav-button {
             color: #ffffff;
             background: var(--ink);
+            box-shadow: 0 10px 24px rgba(20, 23, 31, 0.18);
         }
 
         .nav-button:hover,
@@ -850,17 +860,23 @@ $categories = [
         }
 
         .footer {
-            margin-top: 58px;
-            padding: 30px clamp(20px, 4vw, 48px);
-            color: #dfe5ed;
-            background: var(--ink);
+            position: relative;
+            overflow: hidden;
+            margin-top: 70px;
+            padding: 56px clamp(20px, 4vw, 48px) 24px;
+            color: #edf3f7;
+            background:
+                radial-gradient(circle at 12% 8%, rgba(15, 159, 143, 0.2), transparent 32%),
+                linear-gradient(145deg, #101318, #18202b 56%, #101318);
         }
 
         .footer-inner {
+            position: relative;
+            z-index: 1;
             display: grid;
-            grid-template-columns: minmax(0, 1fr) auto;
-            gap: 24px;
-            align-items: center;
+            grid-template-columns: minmax(260px, 1.35fr) repeat(3, minmax(150px, 0.55fr));
+            gap: clamp(24px, 4vw, 58px);
+            align-items: start;
         }
 
         .footer .brand {
@@ -870,38 +886,91 @@ $categories = [
         .footer .brand-mark {
             color: var(--ink);
             background: #ffffff;
+            box-shadow: inset 0 -5px 0 rgba(15, 159, 143, 0.45);
         }
 
         .footer p {
-            max-width: 580px;
-            margin: 10px 0 0;
+            max-width: 470px;
+            margin: 14px 0 0;
             color: #aeb8c4;
-            line-height: 1.62;
+            line-height: 1.7;
         }
 
-        .footer-links {
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-            gap: 8px;
-            flex-wrap: wrap;
+        .footer-title {
+            margin: 4px 0 14px;
+            color: #ffffff;
+            font-size: 0.82rem;
+            font-weight: 900;
+            text-transform: uppercase;
         }
 
-        .footer-links a {
-            padding: 9px 11px;
-            border-radius: 8px;
-            color: #dfe5ed;
+        .footer-links,
+        .footer-social {
+            display: grid;
+            gap: 9px;
+        }
+
+        .footer-links a,
+        .footer-social a {
+            width: fit-content;
+            color: #c5ced8;
             text-decoration: none;
-            font-weight: 800;
+            font-weight: 780;
+            line-height: 1.45;
+            transition: color 160ms ease, transform 160ms ease;
         }
 
-        .footer-links a:hover {
-            background: rgba(255, 255, 255, 0.08);
+        .footer-links a:hover,
+        .footer-social a:hover {
+            color: #ffffff;
+            transform: translateX(2px);
+        }
+
+        .footer-social a {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .social-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 999px;
+            background: var(--brand);
+            box-shadow: 0 0 0 5px rgba(15, 159, 143, 0.12);
+        }
+
+        .footer-bottom {
+            position: relative;
+            z-index: 1;
+            width: min(100%, 1280px);
+            display: flex;
+            align-items: end;
+            justify-content: space-between;
+            gap: 18px;
+            margin: 48px auto 0;
+            padding-top: 22px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: #8f9aaa;
+            font-size: 0.9rem;
+            font-weight: 760;
+        }
+
+        .footer-wordmark {
+            position: relative;
+            z-index: 0;
+            width: min(100%, 1280px);
+            margin: 18px auto -38px;
+            color: rgba(255, 255, 255, 0.045);
+            font-size: clamp(3.4rem, 13vw, 11rem);
+            font-weight: 950;
+            line-height: 0.8;
+            pointer-events: none;
         }
 
         @media (max-width: 1040px) {
             .footer-inner {
-                grid-template-columns: 1fr;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
             }
 
             .asset-grid {
@@ -921,18 +990,39 @@ $categories = [
                 margin-top: 14px;
             }
 
-            .footer-links {
-                justify-content: flex-start;
-            }
         }
 
         @media (max-width: 640px) {
             .topbar {
-                padding: 12px 14px;
+                padding: 10px 14px;
             }
 
-            .nav-link {
+            .topbar-inner {
+                min-height: 48px;
+                align-items: center;
+                flex-direction: row;
+                gap: 12px;
+            }
+
+            .nav-actions {
+                width: auto;
+                max-width: calc(100vw - 82px);
+                margin-left: auto;
+                justify-content: flex-end;
+                overflow-x: auto;
+                border-radius: 999px;
+                scrollbar-width: none;
+            }
+
+            .nav-actions::-webkit-scrollbar {
                 display: none;
+            }
+
+            .nav-link,
+            .nav-button {
+                min-height: 38px;
+                padding: 0 13px;
+                font-size: 0.84rem;
             }
 
             .brand-name {
@@ -947,9 +1037,31 @@ $categories = [
             }
 
             .hero {
-                min-height: calc(100svh - 63px);
-                padding-top: 48px;
-                padding-bottom: 44px;
+                min-height: auto;
+                align-items: start;
+                padding-top: 42px;
+                padding-bottom: 34px;
+                background:
+                    linear-gradient(180deg, rgba(20, 23, 31, 0.5), rgba(20, 23, 31, 0.76)),
+                    url("assets/images/hero-background.jpg") center top / cover no-repeat;
+            }
+
+            .hero .eyebrow {
+                margin-bottom: 9px;
+                font-size: 0.7rem;
+            }
+
+            h1 {
+                max-width: 350px;
+                font-size: clamp(2.05rem, 10vw, 2.6rem);
+                line-height: 1.04;
+            }
+
+            .hero-copy {
+                max-width: 330px;
+                margin-top: 12px;
+                font-size: 0.95rem;
+                line-height: 1.58;
             }
 
             .hero-grid > *,
@@ -961,37 +1073,163 @@ $categories = [
                 width: 100%;
             }
 
+            .search-panel {
+                margin-top: 22px;
+            }
+
             .search-form {
+                min-height: 0;
                 grid-template-columns: auto 1fr;
-                padding: 12px 14px;
+                gap: 10px;
+                padding: 12px;
+                border-radius: 12px;
+                box-shadow: 0 18px 36px rgba(20, 23, 31, 0.18);
+            }
+
+            .search-form > svg {
+                width: 21px;
+                height: 21px;
+            }
+
+            .search-form input {
+                font-size: 0.94rem;
             }
 
             .search-button {
                 grid-column: 1 / -1;
                 width: 100%;
+                min-height: 44px;
+                border-radius: 10px;
             }
 
             .filter-row {
-                flex-wrap: nowrap;
-                overflow-x: auto;
-                padding-bottom: 2px;
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 8px;
+                overflow: visible;
+                margin-top: 10px;
+                padding-bottom: 0;
             }
 
             .filter-chip {
-                flex: 0 0 auto;
+                min-height: 38px;
+                justify-content: center;
+                padding: 0 9px;
+                font-size: 0.82rem;
+                white-space: nowrap;
+            }
+
+            .categories {
+                position: relative;
+                z-index: 2;
+                margin-top: -10px;
+                padding-top: 0;
+                padding-bottom: 18px;
             }
 
             .category-strip {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                gap: 8px;
+                padding: 10px;
+                border: 1px solid rgba(230, 234, 240, 0.9);
+                border-radius: 16px;
+                background: rgba(255, 255, 255, 0.92);
+                box-shadow: 0 18px 40px rgba(20, 23, 31, 0.08);
+                backdrop-filter: blur(14px);
+            }
+
+            .category-tile {
+                min-height: 74px;
+                align-content: center;
+                justify-items: center;
+                gap: 7px;
+                padding: 8px 4px;
+                border: 0;
+                border-radius: 12px;
+                background: #f7f9fb;
+                text-align: center;
+            }
+
+            .category-icon {
+                width: 32px;
+                height: 32px;
+                border-radius: 10px;
+            }
+
+            .category-icon svg {
+                width: 17px;
+                height: 17px;
+            }
+
+            .category-tile span:last-child {
+                max-width: 100%;
+                overflow: hidden;
+                font-size: 0.72rem;
+                line-height: 1.1;
+                text-overflow: ellipsis;
+                white-space: nowrap;
             }
 
             .asset-grid {
-                column-count: 1;
-                column-gap: 0;
+                column-count: 2;
+                column-gap: 12px;
+            }
+
+            .asset-card {
+                margin-bottom: 14px;
+                overflow: visible;
+                border: 0;
+                background: transparent;
+                box-shadow: none;
+            }
+
+            .asset-card:hover {
+                transform: none;
+                border-color: transparent;
+                box-shadow: none;
+            }
+
+            .asset-thumb {
+                overflow: hidden;
+                border: 0;
+                border-radius: 12px;
+                background: #edf0f4;
+            }
+
+            .asset-thumb::after,
+            .asset-badge,
+            .asset-meta {
+                display: none;
+            }
+
+            .asset-body {
+                padding: 7px 2px 0;
+            }
+
+            .asset-title-row {
+                grid-template-columns: minmax(0, 1fr) auto;
+                gap: 5px;
+            }
+
+            .asset-title {
+                font-size: 0.82rem;
+                line-height: 1.25;
+                white-space: normal;
+            }
+
+            .asset-action {
+                width: 28px;
+                height: 28px;
+                color: var(--ink);
+                background: transparent;
+            }
+
+            .asset-title-row .asset-action:last-of-type {
+                display: none;
             }
 
             .content-inner {
-                padding: 16px;
+                padding: 14px;
             }
 
             .preview-foot {
@@ -1004,28 +1242,44 @@ $categories = [
             }
 
             .footer {
-                padding: 28px 14px;
+                padding: 42px 14px 20px;
+            }
+
+            .footer-inner {
+                grid-template-columns: 1fr;
+            }
+
+            .footer-bottom {
+                align-items: flex-start;
+                flex-direction: column;
+                margin-top: 32px;
+            }
+
+            .footer-wordmark {
+                margin-bottom: -22px;
             }
         }
     </style>
 </head>
 <body>
     <header class="topbar">
-        <a class="brand" href="index.php" aria-label="<?= htmlspecialchars($appName); ?>">
-            <span class="brand-mark">C</span>
-            <span class="brand-name"><?= htmlspecialchars($appName); ?></span>
-        </a>
-        <nav class="nav-actions" aria-label="Navigasi utama">
-            <a class="nav-link" href="catalog.php">Katalog</a>
-            <?php if ($currentUser !== null && AuthManager::can('dashboard')): ?>
-                <a class="nav-link" href="dashboard.php">Dashboard</a>
-                <a class="nav-button" href="logout.php">Keluar</a>
-            <?php elseif ($currentUser !== null): ?>
-                <a class="nav-button" href="logout.php">Keluar</a>
-            <?php else: ?>
-                <a class="nav-button" href="login.php">Login</a>
-            <?php endif; ?>
-        </nav>
+        <div class="topbar-inner">
+            <a class="brand" href="index.php" aria-label="<?= htmlspecialchars($appName); ?>">
+                <span class="brand-mark">C</span>
+                <span class="brand-name"><?= htmlspecialchars($appName); ?></span>
+            </a>
+            <nav class="nav-actions" aria-label="Navigasi utama">
+                <a class="nav-link" href="catalog.php">Katalog</a>
+                <?php if ($currentUser !== null && AuthManager::can('dashboard')): ?>
+                    <a class="nav-link" href="dashboard.php">Dashboard</a>
+                    <a class="nav-button" href="logout.php">Keluar</a>
+                <?php elseif ($currentUser !== null): ?>
+                    <a class="nav-button" href="logout.php">Keluar</a>
+                <?php else: ?>
+                    <a class="nav-button" href="login.php">Login</a>
+                <?php endif; ?>
+            </nav>
+        </div>
     </header>
 
     <main>
@@ -1175,18 +1429,37 @@ $categories = [
 
     <footer class="footer">
         <div class="footer-inner">
-            <div>
+            <section>
                 <a class="brand" href="index.php">
                     <span class="brand-mark">C</span>
                     <span class="brand-name"><?= htmlspecialchars($appName); ?></span>
                 </a>
-                <p>Katalog visual minimalis untuk menemukan, melihat, dan mengunduh aset gambar dari satu tempat.</p>
-            </div>
-            <nav class="footer-links" aria-label="Footer navigation">
+                <p>Cloudify membantu kamu menemukan, mengkurasi, dan membagikan inspirasi visual dari satu library yang ringan dan cepat.</p>
+            </section>
+            <nav class="footer-links" aria-label="Navigasi footer">
+                <h2 class="footer-title">Navigasi</h2>
+                <a href="index.php">Home</a>
                 <a href="catalog.php">Katalog</a>
                 <a href="<?= htmlspecialchars($loginTarget); ?>"><?= $currentUser === null ? 'Login' : 'Workspace'; ?></a>
             </nav>
+            <nav class="footer-links" aria-label="Eksplorasi">
+                <h2 class="footer-title">Eksplorasi</h2>
+                <a href="catalog.php">Inspirasi</a>
+                <a href="catalog.php?sort=newest">Terbaru</a>
+                <a href="catalog.php?type=all">Semua gambar</a>
+            </nav>
+            <nav class="footer-social" aria-label="Social media">
+                <h2 class="footer-title">Social</h2>
+                <a href="#" aria-label="Instagram Cloudify"><span class="social-dot"></span>Instagram</a>
+                <a href="#" aria-label="Dribbble Cloudify"><span class="social-dot"></span>Dribbble</a>
+                <a href="#" aria-label="Behance Cloudify"><span class="social-dot"></span>Behance</a>
+            </nav>
         </div>
+        <div class="footer-bottom">
+            <span>&copy; <?= date('Y'); ?> <?= htmlspecialchars($appName); ?>. All rights reserved.</span>
+            <span>Visual library for ideas, design, and moodboards.</span>
+        </div>
+        <div class="footer-wordmark" aria-hidden="true">CLOUDIFY</div>
     </footer>
     <script>
         (() => {

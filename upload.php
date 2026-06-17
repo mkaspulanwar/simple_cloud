@@ -43,13 +43,13 @@ AuthManager::requirePermission('upload');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     Flash::add('error', 'Akses ditolak', 'Endpoint upload hanya menerima metode POST.');
-    header('Location: dashboard.php');
+    header('Location: dashboard.php?view=library');
     exit;
 }
 
 if (!CsrfManager::validate($_POST['csrf_token'] ?? null)) {
     Flash::add('error', 'Token keamanan tidak valid', 'Silakan refresh halaman lalu coba upload kembali.');
-    header('Location: dashboard.php');
+    header('Location: dashboard.php?view=library');
     exit;
 }
 
@@ -61,7 +61,7 @@ $uploadedFiles = uploaded_files_from_request($_FILES['fileToUpload'] ?? []);
 
 if ($uploadedFiles === []) {
     Flash::add('error', 'Upload gagal', 'Tidak ada gambar yang dipilih.');
-    header('Location: dashboard.php');
+    header('Location: dashboard.php?view=library');
     exit;
 }
 
@@ -118,5 +118,5 @@ if ($successCount > 0 && $failedCount === 0) {
     Flash::add('error', 'Upload gagal', implode(' | ', array_slice($failedMessages, 0, 3)));
 }
 
-header('Location: dashboard.php');
+header('Location: dashboard.php?view=library');
 exit;

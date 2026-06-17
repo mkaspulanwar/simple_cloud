@@ -1,1 +1,119 @@
-[]
+{
+    "pexels-russell-butcher-2935498-31147719.jpg": {
+        "trash_name": "pexels-russell-butcher-2935498-31147719.jpg",
+        "original_name": "pexels-russell-butcher-2935498-31147719.jpg",
+        "owner_id": "admin",
+        "owner_name": "Administrator",
+        "deleted_by_id": "admin",
+        "deleted_by_name": "Administrator",
+        "deleted_at": "2026-05-25T00:18:05+08:00"
+    },
+    "pexels-a-r-2157678326-37486134.jpg": {
+        "trash_name": "pexels-a-r-2157678326-37486134.jpg",
+        "original_name": "pexels-a-r-2157678326-37486134.jpg",
+        "owner_id": "admin",
+        "owner_name": "Administrator",
+        "deleted_by_id": "admin",
+        "deleted_by_name": "Administrator",
+        "deleted_at": "2026-05-25T00:18:10+08:00"
+    },
+    "pexels-ayala-9140-50868.jpg": {
+        "trash_name": "pexels-ayala-9140-50868.jpg",
+        "original_name": "pexels-ayala-9140-50868.jpg",
+        "owner_id": "thegreatanwar",
+        "owner_name": "Super Administrator",
+        "deleted_by_id": "superadmin",
+        "deleted_by_name": "Super Administrator",
+        "deleted_at": "2026-06-17T10:20:44+08:00"
+    },
+    "pexels-fatma-nur-yildirim-kuzlak-2156450046-34213954.jpg": {
+        "trash_name": "pexels-fatma-nur-yildirim-kuzlak-2156450046-34213954.jpg",
+        "original_name": "pexels-fatma-nur-yildirim-kuzlak-2156450046-34213954.jpg",
+        "owner_id": "thegreatanwar",
+        "owner_name": "Super Administrator",
+        "deleted_by_id": "superadmin",
+        "deleted_by_name": "Super Administrator",
+        "deleted_at": "2026-06-17T10:20:49+08:00"
+    },
+    "pexels-paulie-ivicic-568819821-17135781.jpg": {
+        "trash_name": "pexels-paulie-ivicic-568819821-17135781.jpg",
+        "original_name": "pexels-paulie-ivicic-568819821-17135781.jpg",
+        "owner_id": "thegreatanwar",
+        "owner_name": "Super Administrator",
+        "deleted_by_id": "superadmin",
+        "deleted_by_name": "Super Administrator",
+        "deleted_at": "2026-06-17T10:20:55+08:00"
+    },
+    "pexels-oscar-m-344441239-19794203.jpg": {
+        "trash_name": "pexels-oscar-m-344441239-19794203.jpg",
+        "original_name": "pexels-oscar-m-344441239-19794203.jpg",
+        "owner_id": "thegreatanwar",
+        "owner_name": "Super Administrator",
+        "deleted_by_id": "superadmin",
+        "deleted_by_name": "Super Administrator",
+        "deleted_at": "2026-06-17T10:21:00+08:00"
+    },
+    "Jembatan_Charles_di_Praha.jpg": {
+        "trash_name": "Jembatan_Charles_di_Praha.jpg",
+        "original_name": "Jembatan_Charles_di_Praha.jpg",
+        "owner_id": "superadmin",
+        "owner_name": "Super Administrator",
+        "deleted_by_id": "superadmin",
+        "deleted_by_name": "Super Administrator",
+        "deleted_at": "2026-06-17T10:21:07+08:00"
+    },
+    "Sydney_City_Bridge.jpg": {
+        "trash_name": "Sydney_City_Bridge.jpg",
+        "original_name": "Sydney_City_Bridge.jpg",
+        "owner_id": "admin",
+        "owner_name": "Super Administrator",
+        "deleted_by_id": "superadmin",
+        "deleted_by_name": "Super Administrator",
+        "deleted_at": "2026-06-17T10:21:16+08:00"
+    },
+    "pexels-willianjusten-21207396.jpg": {
+        "trash_name": "pexels-willianjusten-21207396.jpg",
+        "original_name": "pexels-willianjusten-21207396.jpg",
+        "owner_id": "admin",
+        "owner_name": "Super Administrator",
+        "deleted_by_id": "superadmin",
+        "deleted_by_name": "Super Administrator",
+        "deleted_at": "2026-06-17T10:21:21+08:00"
+    },
+    "pexels-lovely-ruby-2151623858-34072847.jpg": {
+        "trash_name": "pexels-lovely-ruby-2151623858-34072847.jpg",
+        "original_name": "pexels-lovely-ruby-2151623858-34072847.jpg",
+        "owner_id": "admin",
+        "owner_name": "Super Administrator",
+        "deleted_by_id": "superadmin",
+        "deleted_by_name": "Super Administrator",
+        "deleted_at": "2026-06-17T10:21:25+08:00"
+    },
+    "pexels-zfxmql-36746834.jpg": {
+        "trash_name": "pexels-zfxmql-36746834.jpg",
+        "original_name": "pexels-zfxmql-36746834.jpg",
+        "owner_id": "admin",
+        "owner_name": "Super Administrator",
+        "deleted_by_id": "superadmin",
+        "deleted_by_name": "Super Administrator",
+        "deleted_at": "2026-06-17T10:21:30+08:00"
+    },
+    "pexels-donovan-kelly-110228397-26834515.jpg": {
+        "trash_name": "pexels-donovan-kelly-110228397-26834515.jpg",
+        "original_name": "pexels-donovan-kelly-110228397-26834515.jpg",
+        "owner_id": "admin",
+        "owner_name": "Super Administrator",
+        "deleted_by_id": "superadmin",
+        "deleted_by_name": "Super Administrator",
+        "deleted_at": "2026-06-17T10:21:34+08:00"
+    },
+    "Travel_with_the_lenses.jpg": {
+        "trash_name": "Travel_with_the_lenses.jpg",
+        "original_name": "Travel_with_the_lenses.jpg",
+        "owner_id": "superadmin",
+        "owner_name": "Super Administrator",
+        "deleted_by_id": "superadmin",
+        "deleted_by_name": "Super Administrator",
+        "deleted_at": "2026-06-17T10:21:39+08:00"
+    }
+}

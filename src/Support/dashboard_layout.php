@@ -12,6 +12,7 @@ function dashboard_layout_context(array $currentUser, string $appName): array
     $canManageTrash = AuthManager::can('manage_trash');
     $canViewAudit = AuthManager::can('view_audit');
     $canManageUsers = AuthManager::can('manage_users');
+    $canBackup = AuthManager::can('backup');
 
     $roleLabels = [
         'superadmin' => 'Superadmin',
@@ -49,6 +50,7 @@ function dashboard_layout_context(array $currentUser, string $appName): array
         'canManageTrash' => $canManageTrash,
         'canViewAudit' => $canViewAudit,
         'canManageUsers' => $canManageUsers,
+        'canBackup' => $canBackup,
         'roleLabels' => $roleLabels,
         'roleDescription' => $roleDescriptions[$currentUser['role']] ?? $roleDescriptions['user'],
         'capabilities' => [
@@ -60,15 +62,39 @@ function dashboard_layout_context(array $currentUser, string $appName): array
     ];
 }
 
+function dashboard_menu_items(array $layoutContext): array
+{
+    $items = [
+        ['key' => 'overview', 'label' => 'Overview', 'icon' => 'OV', 'href' => 'dashboard.php?view=overview', 'internal' => true],
+    ];
+
+    $items[] = ['key' => 'library', 'label' => 'Library', 'icon' => 'LB', 'href' => 'dashboard.php?view=library', 'internal' => true];
+
+    if ((bool) $layoutContext['canManageUsers']) {
+        $items[] = ['key' => 'users', 'label' => 'Users', 'icon' => 'US', 'href' => 'dashboard.php?view=users', 'internal' => true];
+    }
+
+    if ((bool) ($layoutContext['canBackup'] ?? false)) {
+        $items[] = ['key' => 'backup', 'label' => 'Backup', 'icon' => 'BK', 'href' => 'dashboard.php?view=backup', 'internal' => true];
+    }
+
+    if ((bool) $layoutContext['canManageTrash']) {
+        $items[] = ['key' => 'trash', 'label' => 'Trash', 'icon' => 'TR', 'href' => 'trash.php', 'internal' => false];
+    }
+
+    if ((bool) $layoutContext['canViewAudit']) {
+        $items[] = ['key' => 'audit', 'label' => 'Audit', 'icon' => 'AU', 'href' => 'dashboard.php?view=audit', 'internal' => true];
+    }
+
+    return $items;
+}
+
 function render_dashboard_sidebar(array $layoutContext, string $activeMenu): void
 {
     $appName = (string) $layoutContext['appName'];
     $currentUser = $layoutContext['currentUser'];
     $roleLabels = $layoutContext['roleLabels'];
-    $canUpload = (bool) $layoutContext['canUpload'];
-    $canManageTrash = (bool) $layoutContext['canManageTrash'];
-    $canViewAudit = (bool) $layoutContext['canViewAudit'];
-    $canManageUsers = (bool) $layoutContext['canManageUsers'];
+    $menuItems = dashboard_menu_items($layoutContext);
     ?>
         <aside class="dashboard-sidebar" aria-label="Navigasi dashboard">
             <a class="dashboard-brand" href="dashboard.php" aria-label="<?= htmlspecialchars($appName); ?> Dashboard">
@@ -81,38 +107,12 @@ function render_dashboard_sidebar(array $layoutContext, string $activeMenu): voi
 
             <nav class="sidebar-block">
                 <span class="sidebar-label">Workspace</span>
-                <a class="sidebar-link <?= $activeMenu === 'overview' ? 'is-active' : ''; ?>" data-menu="overview" href="dashboard.php">
-                    <span class="sidebar-icon">OV</span>
-                    Overview
-                </a>
-                <?php if ($canUpload): ?>
-                    <a class="sidebar-link <?= $activeMenu === 'upload' ? 'is-active' : ''; ?>" data-menu="upload" href="dashboard.php#upload-panel">
-                        <span class="sidebar-icon">UP</span>
-                        Upload
+                <?php foreach ($menuItems as $item): ?>
+                    <a class="sidebar-link <?= $activeMenu === $item['key'] ? 'is-active' : ''; ?>" data-menu="<?= htmlspecialchars((string) $item['key']); ?>" href="<?= htmlspecialchars((string) $item['href']); ?>">
+                        <span class="sidebar-icon"><?= htmlspecialchars((string) $item['icon']); ?></span>
+                        <?= htmlspecialchars((string) $item['label']); ?>
                     </a>
-                <?php endif; ?>
-                <a class="sidebar-link <?= $activeMenu === 'library' ? 'is-active' : ''; ?>" data-menu="library" href="dashboard.php#library-panel">
-                    <span class="sidebar-icon">LB</span>
-                    Library
-                </a>
-                <?php if ($canManageUsers): ?>
-                    <a class="sidebar-link <?= $activeMenu === 'users' ? 'is-active' : ''; ?>" data-menu="users" href="dashboard.php#users-panel">
-                        <span class="sidebar-icon">US</span>
-                        Users
-                    </a>
-                <?php endif; ?>
-                <?php if ($canManageTrash): ?>
-                    <a class="sidebar-link <?= $activeMenu === 'trash' ? 'is-active' : ''; ?>" data-menu="trash" href="trash.php">
-                        <span class="sidebar-icon">TR</span>
-                        Trash
-                    </a>
-                <?php endif; ?>
-                <?php if ($canViewAudit): ?>
-                    <a class="sidebar-link <?= $activeMenu === 'audit' ? 'is-active' : ''; ?>" data-menu="audit" href="dashboard.php#audit-panel">
-                        <span class="sidebar-icon">AU</span>
-                        Audit
-                    </a>
-                <?php endif; ?>
+                <?php endforeach; ?>
             </nav>
 
             <nav class="sidebar-block">
@@ -135,6 +135,59 @@ function render_dashboard_sidebar(array $layoutContext, string $activeMenu): voi
                 <a class="sidebar-logout" href="logout.php">Logout</a>
             </div>
         </aside>
+    <?php
+}
+
+function render_dashboard_mobile_nav(array $layoutContext, string $activeMenu): void
+{
+    $appName = (string) $layoutContext['appName'];
+    $currentUser = $layoutContext['currentUser'];
+    $roleLabels = $layoutContext['roleLabels'];
+    $menuItems = dashboard_menu_items($layoutContext);
+    $activeLabel = 'Overview';
+
+    foreach ($menuItems as $item) {
+        if ($item['key'] === $activeMenu) {
+            $activeLabel = (string) $item['label'];
+            break;
+        }
+    }
+    ?>
+        <header class="dashboard-mobile-nav">
+            <a class="mobile-dashboard-brand" href="dashboard.php?view=overview" aria-label="<?= htmlspecialchars($appName); ?> Dashboard">
+                <span class="dashboard-mark">C</span>
+                <span>
+                    <strong><?= htmlspecialchars($appName); ?></strong>
+                    <small><?= htmlspecialchars($activeLabel); ?></small>
+                </span>
+            </a>
+            <details class="mobile-menu">
+                <summary aria-label="Buka menu dashboard">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </summary>
+                <div class="mobile-menu-panel">
+                    <div class="mobile-account">
+                        <strong><?= htmlspecialchars((string) $currentUser['name']); ?></strong>
+                        <span><?= htmlspecialchars($roleLabels[$currentUser['role']] ?? ucfirst((string) $currentUser['role'])); ?></span>
+                    </div>
+                    <nav class="mobile-menu-links" aria-label="Menu dashboard mobile">
+                        <?php foreach ($menuItems as $item): ?>
+                            <a class="<?= $activeMenu === $item['key'] ? 'is-active' : ''; ?>" href="<?= htmlspecialchars((string) $item['href']); ?>">
+                                <span><?= htmlspecialchars((string) $item['icon']); ?></span>
+                                <?= htmlspecialchars((string) $item['label']); ?>
+                            </a>
+                        <?php endforeach; ?>
+                        <a href="catalog.php"><span>KG</span> Katalog</a>
+                    </nav>
+                    <nav class="mobile-menu-actions" aria-label="Aksi dashboard mobile">
+                        <a class="mobile-home-action" href="index.php"><span>HM</span> Halaman Utama</a>
+                        <a href="logout.php"><span>LO</span> Logout</a>
+                    </nav>
+                </div>
+            </details>
+        </header>
     <?php
 }
 

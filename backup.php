@@ -13,13 +13,13 @@ AuthManager::requirePermission('backup');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     Flash::add('error', 'Akses ditolak', 'Endpoint backup hanya menerima metode POST.');
-    header('Location: dashboard.php');
+    header('Location: dashboard.php?view=backup');
     exit;
 }
 
 if (!CsrfManager::validate($_POST['csrf_token'] ?? null)) {
     Flash::add('error', 'Token keamanan tidak valid', 'Permintaan backup dibatalkan demi keamanan.');
-    header('Location: dashboard.php');
+    header('Location: dashboard.php?view=backup');
     exit;
 }
 
@@ -48,7 +48,7 @@ if ($result['success'] === true) {
         'external_dir' => $result['external_dir'] ?? null,
         'user_id' => AuthManager::userId(),
     ]);
-    header('Location: dashboard.php');
+    header('Location: dashboard.php?view=backup');
     exit;
 }
 
@@ -59,5 +59,5 @@ $auditLogger->log('backup', 'failed', [
     'reason' => $result['error'] ?? $result['message'],
     'user_id' => AuthManager::userId(),
 ]);
-header('Location: dashboard.php');
+header('Location: dashboard.php?view=backup');
 exit;

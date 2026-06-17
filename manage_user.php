@@ -13,13 +13,13 @@ AuthManager::requirePermission('manage_users');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     Flash::add('error', 'Akses ditolak', 'Endpoint user management hanya menerima metode POST.');
-    header('Location: dashboard.php');
+    header('Location: dashboard.php?view=users');
     exit;
 }
 
 if (!CsrfManager::validate($_POST['csrf_token'] ?? null)) {
     Flash::add('error', 'Token keamanan tidak valid', 'Permintaan manajemen user dibatalkan.');
-    header('Location: dashboard.php');
+    header('Location: dashboard.php?view=users');
     exit;
 }
 
@@ -32,7 +32,7 @@ $auditLogger = new AuditLogger((string) app_config('audit.log_path'));
 if ($action === 'delete') {
     if ($currentUserId !== null && strtolower(trim($userId)) === $currentUserId) {
         Flash::add('error', 'User tidak dihapus', 'Anda tidak dapat menghapus akun yang sedang digunakan.');
-        header('Location: dashboard.php');
+        header('Location: dashboard.php?view=users');
         exit;
     }
 
@@ -43,7 +43,7 @@ if ($action === 'delete') {
         'user_id' => $currentUserId,
         'reason' => $result['success'] ? null : $result['message'],
     ]);
-    header('Location: dashboard.php');
+    header('Location: dashboard.php?view=users');
     exit;
 }
 
@@ -70,5 +70,5 @@ $auditLogger->log('manage_user_save', $result['success'] ? 'success' : 'failed',
     'reason' => $result['success'] ? null : $result['message'],
 ]);
 
-header('Location: dashboard.php');
+header('Location: dashboard.php?view=users');
 exit;

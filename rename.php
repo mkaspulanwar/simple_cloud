@@ -14,13 +14,13 @@ AuthManager::requirePermission('rename');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     Flash::add('error', 'Akses ditolak', 'Endpoint rename hanya menerima metode POST.');
-    header('Location: dashboard.php');
+    header('Location: dashboard.php?view=library');
     exit;
 }
 
 if (!CsrfManager::validate($_POST['csrf_token'] ?? null)) {
     Flash::add('error', 'Token keamanan tidak valid', 'Permintaan rename dibatalkan demi keamanan.');
-    header('Location: dashboard.php');
+    header('Location: dashboard.php?view=library');
     exit;
 }
 
@@ -29,7 +29,7 @@ $newName = (string) ($_POST['new_file'] ?? '');
 
 if ($currentName === '' || $newName === '') {
     Flash::add('error', 'Data rename tidak lengkap', 'Nama file asal dan nama file baru wajib diisi.');
-    header('Location: dashboard.php');
+    header('Location: dashboard.php?view=library');
     exit;
 }
 
@@ -46,7 +46,7 @@ if ($currentUser === null || $storage->resolveFile($currentName) === null || !$o
         'reason' => 'forbidden',
         'user_id' => AuthManager::userId(),
     ]);
-    header('Location: dashboard.php');
+    header('Location: dashboard.php?view=library');
     exit;
 }
 
@@ -62,7 +62,7 @@ if ($renameResult['success'] === true) {
         'new_name' => $renamedName,
         'user_id' => AuthManager::userId(),
     ]);
-    header('Location: dashboard.php');
+    header('Location: dashboard.php?view=library');
     exit;
 }
 
@@ -73,5 +73,5 @@ $auditLogger->log('rename', 'failed', [
     'reason' => $renameResult['message'],
     'user_id' => AuthManager::userId(),
 ]);
-header('Location: dashboard.php');
+header('Location: dashboard.php?view=library');
 exit;
